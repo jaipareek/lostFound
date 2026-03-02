@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
+import ScrollReveal from '../components/ScrollReveal'
 import { useNavigate } from 'react-router-dom'
 import {
     Search,
@@ -155,15 +156,17 @@ export default function LandingPage() {
                         { label: 'Members', val: '15.2K', icon: <Users className="text-blue-400" /> },
                         { label: 'Avg Time', val: '12.4h', icon: <Clock className="text-violet-400" /> }
                     ].map((stat, i) => (
-                        <div key={i} className="group premium-card p-12 hover-glow flex flex-col gap-8 text-center md:text-left animate-reveal" style={{ animationDelay: `${i * 100}ms` }}>
-                            <div className="w-14 h-14 bg-white/5 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform">
-                                {stat.icon}
+                        <ScrollReveal key={i} delay={i * 0.1}>
+                            <div className="group premium-card p-12 hover-glow flex flex-col gap-8 text-center md:text-left">
+                                <div className="w-14 h-14 bg-white/5 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform">
+                                    {stat.icon}
+                                </div>
+                                <div>
+                                    <h3 className="text-5xl font-black text-white tracking-widest leading-none mb-3 tabular-nums">{stat.val}</h3>
+                                    <p className="text-[11px] font-black text-zinc-500 uppercase tracking-[0.5em] group-hover:text-primary-500 transition-colors">{stat.label}</p>
+                                </div>
                             </div>
-                            <div>
-                                <h3 className="text-5xl font-black text-white tracking-widest leading-none mb-3 tabular-nums">{stat.val}</h3>
-                                <p className="text-[11px] font-black text-zinc-500 uppercase tracking-[0.5em] group-hover:text-primary-500 transition-colors uppercase">{stat.label}</p>
-                            </div>
-                        </div>
+                        </ScrollReveal>
                     ))}
                 </div>
             </section>
@@ -171,13 +174,15 @@ export default function LandingPage() {
             {/* Features Pipeline - High Spacing, No Overlaps */}
             <section ref={featureRef} className="relative z-10 py-40 px-6">
                 <div className="max-w-6xl mx-auto">
-                    <div className="flex flex-col md:flex-row items-end justify-between mb-24 gap-8">
-                        <div>
-                            <h2 className="text-5xl lg:text-7xl font-black tracking-tighter uppercase italic leading-none mb-4">RECOVERY<br /><span className="text-primary-600">PIPELINE.</span></h2>
-                            <p className="text-zinc-500 font-black tracking-[0.3em] uppercase text-[10px]">Engineered for speed and security.</p>
+                    <ScrollReveal>
+                        <div className="flex flex-col md:flex-row items-end justify-between mb-24 gap-8">
+                            <div>
+                                <h2 className="text-5xl lg:text-7xl font-black tracking-tighter uppercase italic leading-none mb-4">RECOVERY<br /><span className="text-primary-600">PIPELINE.</span></h2>
+                                <p className="text-zinc-500 font-black tracking-[0.3em] uppercase text-[10px]">Engineered for speed and security.</p>
+                            </div>
+                            <div className="h-[1px] flex-1 bg-white/10 hidden md:block mb-6 ml-12" />
                         </div>
-                        <div className="h-[1px] flex-1 bg-white/10 hidden md:block mb-6 ml-12" />
-                    </div>
+                    </ScrollReveal>
 
                     <div className="grid lg:grid-cols-3 gap-16">
                         {[
@@ -197,15 +202,17 @@ export default function LandingPage() {
                                 icon: <Layers className="text-purple-500" />
                             }
                         ].map((s, i) => (
-                            <div key={i} className="space-y-8 p-10 bg-white/[0.02] border border-white/5 rounded-3xl group hover:border-white/10 transition-all">
-                                <div className="w-12 h-12 bg-white/5 rounded-xl flex items-center justify-center group-hover:bg-primary-600 group-hover:text-white transition-all">
-                                    {s.icon}
+                            <ScrollReveal key={i} delay={i * 0.15}>
+                                <div className="space-y-8 p-10 bg-white/[0.02] border border-white/5 rounded-3xl group hover:border-white/10 hover-lift transition-all">
+                                    <div className="w-12 h-12 bg-white/5 rounded-xl flex items-center justify-center group-hover:bg-primary-600 group-hover:text-white transition-all">
+                                        {s.icon}
+                                    </div>
+                                    <div>
+                                        <h4 className="text-2xl font-black mb-4 uppercase tracking-tight">{s.title}</h4>
+                                        <p className="text-zinc-500 font-bold leading-relaxed text-sm uppercase tracking-wider">{s.desc}</p>
+                                    </div>
                                 </div>
-                                <div>
-                                    <h4 className="text-2xl font-black mb-4 uppercase tracking-tight">{s.title}</h4>
-                                    <p className="text-zinc-500 font-bold leading-relaxed text-sm uppercase tracking-wider">{s.desc}</p>
-                                </div>
-                            </div>
+                            </ScrollReveal>
                         ))}
                     </div>
                 </div>
@@ -213,28 +220,30 @@ export default function LandingPage() {
 
             {/* Integrated Footer & Contact */}
             <footer ref={footerRef} className="relative z-10 py-32 px-6 border-t border-white/5">
-                <div className="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center gap-16">
-                    <div className="flex items-center gap-5">
-                        <div className="w-12 h-12 bg-white text-black rounded-2xl flex items-center justify-center shadow-2xl">
-                            <Search size={24} strokeWidth={3} />
+                <ScrollReveal>
+                    <div className="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center gap-16">
+                        <div className="flex items-center gap-5">
+                            <div className="w-12 h-12 bg-white text-black rounded-2xl flex items-center justify-center shadow-2xl">
+                                <Search size={24} strokeWidth={3} />
+                            </div>
+                            <div className="flex flex-col">
+                                <span className="text-2xl font-black tracking-tighter leading-none italic uppercase">CAMPUS<span className="text-primary-600">_</span>TRACE</span>
+                                <span className="text-[10px] font-black tracking-[0.4em] text-zinc-700 uppercase mt-1 italic">Est 2024</span>
+                            </div>
                         </div>
-                        <div className="flex flex-col">
-                            <span className="text-2xl font-black tracking-tighter leading-none italic uppercase">CAMPUS<span className="text-primary-600">_</span>TRACE</span>
-                            <span className="text-[10px] font-black tracking-[0.4em] text-zinc-700 uppercase mt-1 italic">Est 2024</span>
-                        </div>
-                    </div>
 
-                    <a
-                        href="mailto:jai.pareek@mca.christuniversity.in"
-                        className="group flex flex-col items-center md:items-end gap-2"
-                    >
-                        <span className="text-[11px] font-black text-zinc-700 uppercase tracking-[0.5em] mb-2 uppercase">Developer Access</span>
-                        <div className="bg-zinc-900 border border-white/5 px-10 py-6 rounded-3xl flex items-center gap-6 group-hover:border-primary-500/50 transition-all">
-                            <Mail size={20} className="text-primary-500" />
-                            <span className="text-lg lg:text-xl font-black tracking-tight text-white italic">jai.pareek@mca.christuniversity.in</span>
-                        </div>
-                    </a>
-                </div>
+                        <a
+                            href="mailto:jai.pareek@mca.christuniversity.in"
+                            className="group flex flex-col items-center md:items-end gap-2"
+                        >
+                            <span className="text-[11px] font-black text-zinc-700 uppercase tracking-[0.5em] mb-2">Developer Access</span>
+                            <div className="bg-zinc-900 border border-white/5 px-10 py-6 rounded-3xl flex items-center gap-6 group-hover:border-primary-500/50 transition-all hover-lift">
+                                <Mail size={20} className="text-primary-500" />
+                                <span className="text-lg lg:text-xl font-black tracking-tight text-white italic">jai.pareek@mca.christuniversity.in</span>
+                            </div>
+                        </a>
+                    </div>
+                </ScrollReveal>
             </footer>
         </div>
     )

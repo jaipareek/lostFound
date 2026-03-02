@@ -3,22 +3,42 @@ import { useNavigate } from 'react-router-dom'
 import api from '../../lib/axios'
 import toast from 'react-hot-toast'
 import StatusBadge from '../../components/StatusBadge'
-import { FileText, Package, AlertTriangle, CheckCircle, Clock, TrendingUp, MapPin } from 'lucide-react'
+import { FileText, Package, AlertTriangle, CheckCircle, Clock, TrendingUp, MapPin, ArrowRight, Zap } from 'lucide-react'
 
-function StatCard({ icon: Icon, label, value, color, sub, onClick }) {
+/* Animated counter hook */
+function useCountUp(target, duration = 1000) {
+    const [count, setCount] = useState(0)
+    useEffect(() => {
+        if (target == null) return
+        let start = 0
+        const step = target / (duration / 16)
+        const timer = setInterval(() => {
+            start += step
+            if (start >= target) { setCount(target); clearInterval(timer) }
+            else setCount(Math.floor(start))
+        }, 16)
+        return () => clearInterval(timer)
+    }, [target, duration])
+    return count
+}
+
+function StatCard({ icon: Icon, label, value, gradient, sub, onClick, delay }) {
     return (
         <div
             onClick={onClick}
-            className={`bg-white rounded-[2rem] p-6 shadow-sm border border-gray-100/50 flex items-center gap-5 transition-all duration-300 group ${onClick ? 'cursor-pointer hover:shadow-xl hover:-translate-y-1' : ''}`}
+            className={`relative overflow-hidden bg-slate-800/50 backdrop-blur-sm rounded-2xl p-5 border border-white/5 hover:border-white/10 hover-lift transition-all duration-300 group animate-fade-in-up ${delay} ${onClick ? 'cursor-pointer' : ''}`}
         >
-            <div className={`w-14 h-14 rounded-2xl flex items-center justify-center shrink-0 shadow-lg group-hover:scale-110 transition-transform ${color}`}>
-                <Icon size={26} className="text-white" />
+            <div className={`absolute top-0 right-0 w-24 h-24 bg-gradient-to-br ${gradient} opacity-10 blur-2xl rounded-full -mr-8 -mt-8 group-hover:scale-150 transition-transform duration-700`} />
+            <div className="flex items-center gap-4 relative">
+                <div className={`w-12 h-12 rounded-xl flex items-center justify-center shrink-0 shadow-lg group-hover:scale-110 transition-transform bg-gradient-to-br ${gradient} text-white`}>
+                    <Icon size={22} />
+                </div>
+                <div>
+                    <p className="text-2xl font-black text-white tracking-tight leading-none">{value ?? '—'}</p>
+                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1.5">{label}</p>
+                </div>
             </div>
-            <div>
-                <p className="text-3xl font-black text-gray-900 tracking-tight leading-none">{value ?? '—'}</p>
-                <p className="text-xs font-black text-gray-400 uppercase tracking-widest mt-2">{label}</p>
-                {sub && <p className="text-[10px] font-bold text-primary-400 mt-1">{sub}</p>}
-            </div>
+            {sub && <p className="text-[11px] font-semibold text-amber-400 mt-3 ml-16">{sub}</p>}
         </div>
     )
 }
@@ -30,6 +50,12 @@ export default function AuthorityDashboard() {
     const [disputes, setDisputes] = useState([])
     const [loading, setLoading] = useState(true)
 
+    const totalLost = useCountUp(stats?.totalLost)
+    const totalFound = useCountUp(stats?.totalFound)
+    const disputeCount = useCountUp(stats?.disputes)
+    const closedCount = useCountUp(stats?.closed)
+    const openCount = useCountUp(stats?.openReports)
+
     useEffect(() => {
         const fetchAll = async () => {
             setLoading(true)
@@ -39,12 +65,10 @@ export default function AuthorityDashboard() {
                     api.get('/found-items'),
                     api.get('/claims/disputes'),
                 ])
-
                 const lostReports = lostRes.data.reports || []
                 const foundItems = foundRes.data.items || []
                 const allDisputes = disputeRes.data.disputes || []
 
-                // Compute stats
                 setStats({
                     totalLost: lostReports.length,
                     openReports: lostReports.filter(r => r.status === 'REPORTED').length,
@@ -53,8 +77,6 @@ export default function AuthorityDashboard() {
                     disputes: allDisputes.filter(d => d.status === 'OPEN').length,
                     closed: foundItems.filter(i => i.status === 'CLOSED').length,
                 })
-
-                // Recent 5 lost reports
                 setRecent(lostReports.slice(0, 5))
                 setDisputes(allDisputes.filter(d => d.status === 'OPEN').slice(0, 3))
             } catch {
@@ -68,115 +90,88 @@ export default function AuthorityDashboard() {
 
     if (loading) {
         return (
-            <div className="space-y-8">
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="space-y-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
                     {Array.from({ length: 6 }).map((_, i) => (
-                        <div key={i} className="h-32 bg-white rounded-[2rem] animate-pulse border border-gray-100" />
+                        <div key={i} className="h-28 bg-slate-800/50 rounded-2xl animate-pulse border border-white/5" />
                     ))}
                 </div>
             </div>
         )
     }
 
+    const returnRate = stats?.totalFound > 0 ? Math.round((stats.closed / stats.totalFound) * 100) : 0
+
     return (
-        <div className="space-y-10">
+        <div className="space-y-8 pb-8">
             {/* Header */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 animate-fade-in-up stagger-1">
                 <div>
-                    <h1 className="text-3xl font-black text-gray-900 tracking-tight">
-                        <span className="gradient-text">Authority Control</span>
+                    <h1 className="text-2xl font-black text-white tracking-tight">
+                        <span className="bg-gradient-to-r from-amber-400 to-orange-400 bg-clip-text text-transparent">Authority Control</span>
                     </h1>
-                    <p className="text-sm text-gray-500 mt-1 font-medium">
+                    <p className="text-sm text-slate-400 mt-1 font-medium">
                         {new Date().toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
                     </p>
                 </div>
-                <div className="flex items-center gap-3 bg-white px-5 py-2.5 rounded-2xl border border-gray-100 shadow-sm self-start sm:self-center">
-                    <Clock size={18} className="text-primary-500" />
-                    <span className="text-xs font-black uppercase tracking-widest text-gray-500">Live Traffic</span>
-                    <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
+                <div className="flex items-center gap-2.5 bg-slate-800/60 backdrop-blur-sm px-4 py-2.5 rounded-xl border border-white/5 self-start">
+                    <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                    <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Live</span>
                 </div>
             </div>
 
             {/* Stats Grid */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                <StatCard
-                    icon={FileText}
-                    label="Lost Reports"
-                    value={stats?.totalLost}
-                    color="bg-primary-500"
-                    sub={`${stats?.openReports} active requests`}
-                    onClick={() => navigate('/authority/lost')}
-                />
-                <StatCard
-                    icon={Package}
-                    label="Found Vault"
-                    value={stats?.totalFound}
-                    color="bg-secondary-500"
-                    sub={`${stats?.available} items in storage`}
-                    onClick={() => navigate('/authority/inventory')}
-                />
-                <StatCard
-                    icon={AlertTriangle}
-                    label="Open Disputes"
-                    value={stats?.disputes}
-                    color={stats?.disputes > 0 ? "bg-orange-500" : "bg-gray-400"}
-                    sub={stats?.disputes > 0 ? "High priority" : "All cases resolved"}
-                    onClick={() => navigate('/authority/disputes')}
-                />
-                <StatCard
-                    icon={CheckCircle}
-                    label="Return Rate"
-                    value={stats?.totalFound > 0
-                        ? `${Math.round((stats.closed / stats.totalFound) * 100)}%`
-                        : '0%'}
-                    color="bg-green-500"
-                    sub={`${stats?.closed} items returned`}
-                />
-                <StatCard
-                    icon={Clock}
-                    label="Claim Queue"
-                    value={stats?.openReports} // Assuming open reports need review
-                    color="bg-amber-500"
-                    sub="Awaiting verification"
-                    onClick={() => navigate('/authority/claims')}
-                />
-                <StatCard
-                    icon={TrendingUp}
-                    label="Success Meter"
-                    value="94"
-                    color="bg-purple-500"
-                    sub="Campus satisfaction"
-                />
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+                <StatCard icon={FileText} label="Lost Reports" value={totalLost} gradient="from-indigo-500 to-indigo-700" sub={`${stats?.openReports} active`} onClick={() => navigate('/authority/lost')} delay="stagger-1" />
+                <StatCard icon={Package} label="Found Vault" value={totalFound} gradient="from-emerald-500 to-teal-600" sub={`${stats?.available} available`} onClick={() => navigate('/authority/inventory')} delay="stagger-2" />
+                <StatCard icon={AlertTriangle} label="Disputes" value={disputeCount} gradient={stats?.disputes > 0 ? "from-orange-500 to-amber-600" : "from-gray-500 to-gray-600"} sub={stats?.disputes > 0 ? "Needs attention" : "All clear"} onClick={() => navigate('/authority/disputes')} delay="stagger-3" />
+                <StatCard icon={CheckCircle} label="Return Rate" value={`${returnRate}%`} gradient="from-green-500 to-emerald-600" sub={`${closedCount} returned`} delay="stagger-4" />
+                <StatCard icon={Clock} label="Claim Queue" value={openCount} gradient="from-amber-500 to-orange-600" sub="Awaiting verification" onClick={() => navigate('/authority/claims')} delay="stagger-5" />
+                <StatCard icon={TrendingUp} label="Satisfaction" value="94" gradient="from-purple-500 to-violet-600" sub="Campus score" delay="stagger-6" />
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            {/* Recovery Progress */}
+            <div className="bg-slate-800/50 backdrop-blur-sm rounded-2xl p-6 border border-white/5 animate-fade-in-up stagger-3">
+                <div className="flex items-center justify-between mb-3">
+                    <h3 className="text-sm font-bold text-white flex items-center gap-2"><Zap size={14} className="text-amber-400" /> Recovery Progress</h3>
+                    <span className="text-sm font-black bg-gradient-to-r from-amber-400 to-orange-400 bg-clip-text text-transparent">{returnRate}%</span>
+                </div>
+                <div className="w-full h-3 bg-slate-700/50 rounded-full overflow-hidden">
+                    <div
+                        className="h-full bg-gradient-to-r from-amber-500 to-orange-500 rounded-full transition-all duration-1000 ease-out relative"
+                        style={{ width: `${returnRate}%` }}
+                    >
+                        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-shimmer-sweep" />
+                    </div>
+                </div>
+                <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest mt-2">{closedCount} of {totalFound} items successfully returned</p>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 animate-fade-in-up stagger-4">
                 {/* Recent Lost Reports */}
-                <div className="bg-white rounded-[2.5rem] border border-gray-100 shadow-sm overflow-hidden flex flex-col">
-                    <div className="flex items-center justify-between px-8 py-6 border-b border-gray-50 bg-gray-50/30">
-                        <h2 className="text-sm font-black text-gray-900 uppercase tracking-widest flex items-center gap-2">
-                            Recent Reports
+                <div className="bg-slate-800/50 backdrop-blur-sm rounded-2xl border border-white/5 overflow-hidden flex flex-col">
+                    <div className="flex items-center justify-between px-6 py-5 border-b border-white/5">
+                        <h2 className="text-sm font-bold text-white uppercase tracking-wider flex items-center gap-2">
+                            <FileText size={14} className="text-indigo-400" /> Recent Reports
                         </h2>
-                        <button
-                            onClick={() => navigate('/authority/lost')}
-                            className="text-[10px] font-black text-primary-600 hover:text-primary-700 uppercase tracking-widest bg-primary-50 px-3 py-1.5 rounded-xl transition-all"
-                        >
-                            View all
+                        <button onClick={() => navigate('/authority/lost')} className="text-[10px] font-bold text-amber-400 hover:text-amber-300 uppercase tracking-widest flex items-center gap-1 transition-all">
+                            View all <ArrowRight size={10} />
                         </button>
                     </div>
                     {recent.length === 0 ? (
-                        <div className="flex flex-col items-center justify-center py-16 opacity-40">
-                            <span className="text-4xl mb-4">📄</span>
-                            <p className="text-xs font-black uppercase tracking-widest">No reports yet</p>
+                        <div className="flex flex-col items-center justify-center py-14 opacity-50">
+                            <span className="text-3xl mb-3">📄</span>
+                            <p className="text-xs font-bold text-slate-500 uppercase tracking-widest">No reports yet</p>
                         </div>
                     ) : (
-                        <div className="divide-y divide-gray-50">
+                        <div className="divide-y divide-white/5">
                             {recent.map((r) => (
-                                <div key={r.id} className="flex items-center justify-between px-8 py-5 hover:bg-gray-50 transition-colors group cursor-pointer" onClick={() => navigate('/authority/lost')}>
+                                <div key={r.id} className="flex items-center justify-between px-6 py-4 hover:bg-white/[0.02] transition-colors group cursor-pointer" onClick={() => navigate('/authority/lost')}>
                                     <div className="min-w-0">
-                                        <p className="text-sm font-bold text-gray-900 truncate group-hover:text-primary-600 transition-colors">{r.item_name}</p>
-                                        <div className="flex items-center gap-2 mt-1">
-                                            <MapPin size={12} className="text-gray-300" />
-                                            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest truncate">{r.lost_location}</p>
+                                        <p className="text-sm font-bold text-white truncate group-hover:text-amber-400 transition-colors">{r.item_name}</p>
+                                        <div className="flex items-center gap-1.5 mt-1">
+                                            <MapPin size={11} className="text-slate-600" />
+                                            <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider truncate">{r.lost_location}</p>
                                         </div>
                                     </div>
                                     <StatusBadge status={r.status} />
@@ -187,43 +182,38 @@ export default function AuthorityDashboard() {
                 </div>
 
                 {/* Open Disputes */}
-                <div className="bg-white rounded-[2.5rem] border border-gray-100 shadow-sm overflow-hidden flex flex-col">
-                    <div className="flex items-center justify-between px-8 py-6 border-b border-gray-50 bg-orange-50/20">
-                        <h2 className="text-sm font-black text-gray-900 uppercase tracking-widest flex items-center gap-2">
-                            <AlertTriangle size={16} className="text-orange-500" /> Open Disputes
+                <div className="bg-slate-800/50 backdrop-blur-sm rounded-2xl border border-white/5 overflow-hidden flex flex-col">
+                    <div className="flex items-center justify-between px-6 py-5 border-b border-white/5">
+                        <h2 className="text-sm font-bold text-white uppercase tracking-wider flex items-center gap-2">
+                            <AlertTriangle size={14} className="text-orange-400" /> Open Disputes
                         </h2>
-                        <button
-                            onClick={() => navigate('/authority/disputes')}
-                            className="text-[10px] font-black text-orange-600 hover:text-orange-700 uppercase tracking-widest bg-orange-50 px-3 py-1.5 rounded-xl transition-all"
-                        >
-                            Manage
+                        <button onClick={() => navigate('/authority/disputes')} className="text-[10px] font-bold text-amber-400 hover:text-amber-300 uppercase tracking-widest flex items-center gap-1 transition-all">
+                            Manage <ArrowRight size={10} />
                         </button>
                     </div>
                     {disputes.length === 0 ? (
-                        <div className="flex flex-col items-center justify-center py-16">
-                            <div className="w-16 h-16 rounded-full bg-green-50 flex items-center justify-center mb-4">
-                                <CheckCircle size={32} className="text-green-500" />
+                        <div className="flex flex-col items-center justify-center py-14">
+                            <div className="w-14 h-14 rounded-2xl bg-emerald-500/10 flex items-center justify-center mb-3">
+                                <CheckCircle size={28} className="text-emerald-400" />
                             </div>
-                            <p className="text-xs font-black text-gray-400 uppercase tracking-widest">No active disputes</p>
+                            <p className="text-xs font-bold text-slate-500 uppercase tracking-widest">No active disputes</p>
                         </div>
                     ) : (
-                        <div className="divide-y divide-gray-50">
+                        <div className="divide-y divide-white/5">
                             {disputes.map((d) => (
-                                <div key={d.id} className="flex items-center gap-4 px-8 py-5 hover:bg-gray-50 transition-colors cursor-pointer" onClick={() => navigate('/authority/disputes')}>
-                                    <div className="w-10 h-10 rounded-xl bg-orange-50 flex items-center justify-center text-orange-500 shrink-0 font-black text-xs">
+                                <div key={d.id} className="flex items-center gap-4 px-6 py-4 hover:bg-white/[0.02] transition-colors cursor-pointer" onClick={() => navigate('/authority/disputes')}>
+                                    <div className="w-10 h-10 rounded-xl bg-orange-500/10 flex items-center justify-center text-orange-400 shrink-0 font-black text-xs border border-orange-500/20">
                                         {d.claims?.length || 0}C
                                     </div>
                                     <div className="min-w-0 flex-1">
-                                        <p className="text-sm font-bold text-gray-900 truncate">
-                                            {d.found_item?.item_name || 'Unknown item'}
-                                        </p>
-                                        <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mt-0.5">
+                                        <p className="text-sm font-bold text-white truncate">{d.found_item?.item_name || 'Unknown item'}</p>
+                                        <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mt-0.5">
                                             Vault: {d.found_item?.storage_location || 'Main Storage'}
                                         </p>
                                     </div>
                                     <button
-                                        onClick={(e) => { e.stopPropagation(); navigate('/authority/disputes'); }}
-                                        className="shrink-0 text-[10px] font-black uppercase tracking-widest bg-white border border-gray-100 text-gray-500 px-3 py-2 rounded-xl hover:bg-primary-600 hover:text-white hover:border-primary-600 transition-all shadow-sm"
+                                        onClick={(e) => { e.stopPropagation(); navigate('/authority/disputes') }}
+                                        className="shrink-0 text-[10px] font-bold uppercase tracking-wider bg-amber-500/10 border border-amber-500/20 text-amber-400 px-3 py-2 rounded-lg hover:bg-amber-500 hover:text-white transition-all"
                                     >
                                         Resolve
                                     </button>

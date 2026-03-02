@@ -13,9 +13,8 @@ export default function ClaimRequests() {
     const [items, setItems] = useState([])
     const [loading, setLoading] = useState(true)
     const [search, setSearch] = useState('')
-    const [expandedItems, setExpandedItems] = useState({}) // item.id -> bool
+    const [expandedItems, setExpandedItems] = useState({})
 
-    // Action states
     const [confirm, setConfirm] = useState({ open: false, id: null, action: '', itemName: '' })
     const [processing, setProcessing] = useState(false)
 
@@ -62,7 +61,6 @@ export default function ClaimRequests() {
         }
     }
 
-    // Filter items by search
     const filteredItems = items.filter(item =>
         item.item_name.toLowerCase().includes(search.toLowerCase())
     )
@@ -71,8 +69,10 @@ export default function ClaimRequests() {
         <div className="space-y-6">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
-                    <h1 className="text-2xl font-bold text-gray-900">✅ Claim Requests</h1>
-                    <p className="text-sm text-gray-500 mt-0.5">Review and verify student claims for found items</p>
+                    <h1 className="text-2xl font-bold text-white flex items-center gap-3">
+                        <CheckCircle className="text-emerald-400" /> Claim Requests
+                    </h1>
+                    <p className="text-sm text-slate-400 mt-0.5">Review and verify student claims for found items</p>
                 </div>
             </div>
 
@@ -85,24 +85,13 @@ export default function ClaimRequests() {
             </div>
 
             {loading ? (
-                <div className="card p-0 overflow-hidden border border-gray-100 bg-white">
-                    <table className="w-full text-left border-collapse">
-                        <thead className="bg-gray-50/50 border-b border-gray-100">
-                            <tr>
-                                <th className="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest w-10"></th>
-                                <th className="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest text-gray-400 uppercase tracking-wider">Item Name</th>
-                                <th className="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest text-gray-400 uppercase tracking-wider">Category</th>
-                                <th className="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest text-gray-400 uppercase tracking-wider">Pending Claims</th>
-                                <th className="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest text-gray-400 uppercase tracking-wider text-right">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {Array.from({ length: 5 }).map((_, i) => <TableRowSkeleton key={i} cols={5} />)}
-                        </tbody>
-                    </table>
+                <div className="space-y-4">
+                    {Array.from({ length: 3 }).map((_, i) => (
+                        <div key={i} className="h-24 bg-slate-800/50 rounded-2xl animate-pulse border border-white/5" />
+                    ))}
                 </div>
             ) : filteredItems.length === 0 ? (
-                <div className="bg-white rounded-[2rem] p-12 border border-gray-100/50 shadow-sm flex flex-col items-center text-center">
+                <div className="bg-slate-800/60 rounded-[2rem] p-12 border border-white/8 flex flex-col items-center text-center">
                     <EmptyState
                         icon="✅"
                         title="No pending claims"
@@ -112,17 +101,17 @@ export default function ClaimRequests() {
             ) : (
                 <div className="space-y-4">
                     {filteredItems.map((item) => (
-                        <div key={item.id} className="bg-white rounded-[2rem] overflow-hidden border border-gray-100 shadow-sm transition-all hover:shadow-md">
-                            {/* Item Header (Collapsible trigger) */}
+                        <div key={item.id} className="bg-slate-800/60 rounded-2xl overflow-hidden border border-white/8 transition-all hover:border-white/15">
+                            {/* Item Header */}
                             <div
                                 onClick={() => toggleExpand(item.id)}
-                                className={`flex items-center gap-4 px-6 py-5 cursor-pointer transition-colors ${expandedItems[item.id] ? 'bg-primary-50/30' : 'hover:bg-gray-50/50'}`}
+                                className={`flex items-center gap-4 px-6 py-5 cursor-pointer transition-colors ${expandedItems[item.id] ? 'bg-amber-500/5' : 'hover:bg-white/[0.03]'}`}
                             >
-                                <div className="text-gray-400 shrink-0">
+                                <div className="text-slate-500 shrink-0">
                                     {expandedItems[item.id] ? <ChevronDown size={22} /> : <ChevronRight size={22} />}
                                 </div>
 
-                                <div className="w-14 h-14 rounded-2xl overflow-hidden bg-gray-50 border border-gray-100 shrink-0 flex items-center justify-center text-2xl shadow-inner">
+                                <div className="w-14 h-14 rounded-2xl overflow-hidden bg-slate-700/50 border border-white/10 shrink-0 flex items-center justify-center text-2xl">
                                     {item.image_url ? (
                                         <img src={item.image_url} alt="" className="w-full h-full object-cover" />
                                     ) : (
@@ -131,49 +120,49 @@ export default function ClaimRequests() {
                                 </div>
 
                                 <div className="flex-1 min-w-0">
-                                    <h3 className="font-black text-gray-900 truncate tracking-tight">{item.item_name}</h3>
+                                    <h3 className="font-black text-white truncate tracking-tight">{item.item_name}</h3>
                                     <div className="flex items-center gap-2 mt-1">
-                                        <span className="text-[10px] font-black text-primary-600 uppercase tracking-widest bg-primary-50 px-2 py-0.5 rounded-md border border-primary-100/50">{item.category?.name}</span>
-                                        <span className="text-gray-300">•</span>
-                                        <span className="text-xs text-gray-500 font-medium flex items-center gap-1"><Info size={12} className="text-gray-400" /> {item.found_location}</span>
+                                        <span className="text-[10px] font-black text-amber-400 uppercase tracking-widest bg-amber-500/10 px-2 py-0.5 rounded-md border border-amber-500/20">{item.category?.name}</span>
+                                        <span className="text-slate-600">•</span>
+                                        <span className="text-xs text-slate-400 font-medium flex items-center gap-1"><Info size={12} className="text-slate-500" /> {item.found_location}</span>
                                     </div>
                                 </div>
 
                                 <div className="flex flex-col items-end gap-1.5 shrink-0">
-                                    <div className="flex items-center gap-1.5 text-orange-600 bg-orange-50 px-3 py-1 rounded-full border border-orange-100/50 shadow-sm">
+                                    <div className="flex items-center gap-1.5 text-orange-400 bg-orange-500/10 px-3 py-1 rounded-full border border-orange-500/20">
                                         <AlertTriangle size={12} />
                                         <span className="text-[10px] font-black uppercase tracking-wider">{(item.claims?.length || 0)} Request{(item.claims?.length || 0) > 1 ? 's' : ''}</span>
                                     </div>
-                                    <span className="hidden sm:inline text-[9px] text-gray-400 font-black uppercase tracking-widest">Verify Claims</span>
+                                    <span className="hidden sm:inline text-[9px] text-slate-600 font-black uppercase tracking-widest">Verify Claims</span>
                                 </div>
                             </div>
 
-                            {/* Claims List (Expanded content) */}
+                            {/* Claims List */}
                             {expandedItems[item.id] && (
-                                <div className="border-t border-dashed border-gray-200">
-                                    <div className="p-6 bg-gray-50/20 backdrop-blur-sm">
+                                <div className="border-t border-white/5">
+                                    <div className="p-6 bg-slate-900/40">
                                         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
                                             {item.claims?.map((claim) => (
-                                                <div key={claim.id} className="bg-white rounded-[2rem] border border-gray-200 shadow-sm p-6 flex flex-col group hover:border-primary-200 transition-all">
-                                                    <div className="flex items-start justify-between mb-5 pb-5 border-b border-gray-100/50">
+                                                <div key={claim.id} className="bg-slate-800/70 rounded-2xl border border-white/8 p-6 flex flex-col group hover:border-amber-500/20 transition-all">
+                                                    <div className="flex items-start justify-between mb-5 pb-5 border-b border-white/5">
                                                         <div className="flex items-center gap-3">
-                                                            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary-50 to-indigo-50 flex items-center justify-center text-primary-600 font-bold border border-primary-100">
+                                                            <div className="w-10 h-10 rounded-full bg-amber-500/10 flex items-center justify-center text-amber-400 font-bold border border-amber-500/20">
                                                                 {claim.claimant?.full_name?.charAt(0)}
                                                             </div>
                                                             <div>
-                                                                <p className="font-bold text-gray-900 leading-tight">{claim.claimant?.full_name}</p>
-                                                                <p className="text-[9px] text-gray-400 font-black uppercase tracking-widest mt-0.5">ID: {claim.claimant?.student_id}</p>
+                                                                <p className="font-bold text-white leading-tight">{claim.claimant?.full_name}</p>
+                                                                <p className="text-[9px] text-slate-500 font-black uppercase tracking-widest mt-0.5">ID: {claim.claimant?.student_id}</p>
                                                             </div>
                                                         </div>
-                                                        <div className="text-[10px] font-black text-gray-400 uppercase tracking-widest bg-gray-50 px-2 py-1 rounded-lg">
+                                                        <div className="text-[10px] font-black text-slate-500 uppercase tracking-widest bg-slate-700/50 px-2 py-1 rounded-lg">
                                                             {new Date(claim.created_at).toLocaleDateString()}
                                                         </div>
                                                     </div>
 
                                                     <div className="space-y-4 flex-1">
-                                                        <div className="bg-gray-50/50 p-4 rounded-2xl border border-gray-100/50">
-                                                            <label className="text-[9px] font-black text-primary-400 uppercase tracking-widest block mb-2">Ownership Proof</label>
-                                                            <p className="text-xs text-gray-700 font-bold italic leading-relaxed">
+                                                        <div className="bg-slate-700/30 p-4 rounded-2xl border border-white/5">
+                                                            <label className="text-[9px] font-black text-amber-400 uppercase tracking-widest block mb-2">Ownership Proof</label>
+                                                            <p className="text-xs text-slate-300 font-bold italic leading-relaxed">
                                                                 "{claim.ownership_proof}"
                                                             </p>
                                                         </div>
@@ -181,31 +170,31 @@ export default function ClaimRequests() {
                                                         <div className="grid grid-cols-1 gap-4">
                                                             {claim.unique_marks && (
                                                                 <div>
-                                                                    <label className="text-[9px] font-black text-gray-400 uppercase tracking-widest block mb-1">Unique Marks</label>
-                                                                    <p className="text-xs text-gray-600 font-medium">
+                                                                    <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest block mb-1">Unique Marks</label>
+                                                                    <p className="text-xs text-slate-300 font-medium">
                                                                         {claim.unique_marks}
                                                                     </p>
                                                                 </div>
                                                             )}
                                                             {claim.extra_details && (
                                                                 <div>
-                                                                    <label className="text-[9px] font-black text-gray-400 uppercase tracking-widest block mb-1">Additional Notes</label>
-                                                                    <p className="text-xs text-gray-500 font-medium italic">{claim.extra_details}</p>
+                                                                    <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest block mb-1">Additional Notes</label>
+                                                                    <p className="text-xs text-slate-400 font-medium italic">{claim.extra_details}</p>
                                                                 </div>
                                                             )}
                                                         </div>
                                                     </div>
 
-                                                    <div className="flex gap-2 mt-6 pt-6 border-t border-gray-100/50">
+                                                    <div className="flex gap-2 mt-6 pt-6 border-t border-white/5">
                                                         <button
                                                             onClick={() => askAction(claim.id, 'reject', item.item_name)}
-                                                            className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-[10px] font-black text-red-600 hover:bg-red-50 transition-all uppercase tracking-widest border border-red-100"
+                                                            className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-[10px] font-black text-red-400 hover:bg-red-500/10 transition-all uppercase tracking-widest border border-red-500/20"
                                                         >
                                                             <XCircle size={14} /> Reject
                                                         </button>
                                                         <button
                                                             onClick={() => askAction(claim.id, 'approve', item.item_name)}
-                                                            className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-[10px] font-black text-white bg-primary-600 hover:bg-primary-700 hover:shadow-lg shadow-primary-200 transition-all uppercase tracking-widest"
+                                                            className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-[10px] font-black text-white bg-emerald-600 hover:bg-emerald-500 hover:shadow-lg hover:shadow-emerald-500/20 transition-all uppercase tracking-widest"
                                                         >
                                                             <CheckCircle size={14} /> Approve
                                                         </button>

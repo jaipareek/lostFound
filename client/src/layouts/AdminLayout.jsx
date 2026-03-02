@@ -1,20 +1,30 @@
-import { NavLink, useNavigate } from 'react-router-dom'
+import { NavLink, useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import toast from 'react-hot-toast'
-import { Users, Tag, ScrollText, Trash2, LogOut, Menu } from 'lucide-react'
-import { useState } from 'react'
+import { Users, Tag, ScrollText, Trash2, LogOut, Menu, X, Shield } from 'lucide-react'
+import { useState, useEffect } from 'react'
 
 const NAV_ITEMS = [
-    { to: '/admin/users', icon: Users, label: 'User Management' },
+    { to: '/admin/users', icon: Users, label: 'Users' },
     { to: '/admin/categories', icon: Tag, label: 'Categories' },
-    { to: '/admin/logs', icon: ScrollText, label: 'Activity Logs' },
-    { to: '/admin/reports', icon: Trash2, label: 'Moderate Reports' },
+    { to: '/admin/logs', icon: ScrollText, label: 'Logs' },
+    { to: '/admin/reports', icon: Trash2, label: 'Moderate' },
 ]
 
 export default function AdminLayout({ children }) {
     const { user, logout } = useAuth()
     const navigate = useNavigate()
-    const [sidebarOpen, setSidebarOpen] = useState(false)
+    const location = useLocation()
+    const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+    const [scrolled, setScrolled] = useState(false)
+
+    useEffect(() => {
+        const onScroll = () => setScrolled(window.scrollY > 10)
+        window.addEventListener('scroll', onScroll)
+        return () => window.removeEventListener('scroll', onScroll)
+    }, [])
+
+    useEffect(() => { setMobileMenuOpen(false) }, [location.pathname])
 
     const handleLogout = () => {
         logout()
@@ -23,93 +33,94 @@ export default function AdminLayout({ children }) {
     }
 
     return (
-        <div className="flex h-screen bg-gray-50 overflow-hidden font-sans">
-            {/* Mobile overlay */}
-            {sidebarOpen && (
-                <div
-                    className="fixed inset-0 z-40 bg-gray-900/60 backdrop-blur-sm lg:hidden transition-opacity duration-300"
-                    onClick={() => setSidebarOpen(false)}
-                />
-            )}
+        <div className="min-h-screen bg-gradient-to-br from-gray-950 via-[#0f0a1a] to-gray-950 font-sans dark-theme">
+            {/* Animated purple glow orbs */}
+            <div className="fixed top-[-10%] right-[-5%] w-[600px] h-[600px] bg-violet-600/[0.05] rounded-full blur-[150px] pointer-events-none animate-breathe" />
+            <div className="fixed bottom-[-10%] left-[-5%] w-[500px] h-[500px] bg-purple-600/[0.04] rounded-full blur-[130px] pointer-events-none animate-pulse-slow" />
+            <div className="fixed top-[40%] left-[50%] w-[300px] h-[300px] bg-indigo-500/[0.03] rounded-full blur-[100px] pointer-events-none" />
 
-            {/* Sidebar */}
-            <aside className={`
-                fixed lg:static inset-y-0 left-0 z-50 w-72 bg-gray-900 
-                flex flex-col transition-all duration-300 ease-in-out shadow-2xl lg:shadow-none
-                ${sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
-            `}>
-                {/* Brand */}
-                <div className="flex items-center gap-3 px-8 py-8 border-b border-white/5">
-                    <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center text-white shadow-lg shadow-purple-900/20">
-                        <Users size={22} strokeWidth={2.5} />
-                    </div>
-                    <div>
-                        <p className="font-black text-white text-lg leading-none tracking-tight">CampusFlow</p>
-                        <p className="text-[10px] uppercase tracking-[0.2em] text-purple-400 font-bold mt-1">Admin Portal</p>
-                    </div>
-                </div>
+            {/* Premium dark glass navbar */}
+            <header className={`sticky top-0 z-50 transition-all duration-500 ${scrolled ? 'bg-gray-950/80 backdrop-blur-2xl shadow-2xl shadow-violet-500/5 border-b border-violet-500/10' : 'bg-gray-950/50 backdrop-blur-xl border-b border-white/5'}`}>
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <div className="flex items-center justify-between h-16">
+                        {/* Logo */}
+                        <div className="flex items-center gap-3 shrink-0">
+                            <div className="relative group">
+                                <div className="absolute inset-0 bg-gradient-to-br from-violet-500 to-purple-700 rounded-xl blur-md opacity-50 group-hover:opacity-80 transition-opacity" />
+                                <div className="relative w-9 h-9 rounded-xl bg-gradient-to-br from-violet-500 to-purple-700 flex items-center justify-center text-white shadow-lg">
+                                    <Shield size={17} strokeWidth={2.5} />
+                                </div>
+                            </div>
+                            <div className="hidden sm:block">
+                                <p className="font-extrabold text-white text-base leading-none tracking-tight">CampusTrace</p>
+                                <p className="text-[9px] uppercase tracking-widest bg-gradient-to-r from-violet-400 to-purple-400 bg-clip-text text-transparent font-bold mt-0.5">Admin</p>
+                            </div>
+                        </div>
 
-                {/* Nav */}
-                <nav className="flex-1 px-4 py-6 space-y-1.5 overflow-y-auto">
-                    {NAV_ITEMS.map(({ to, icon: Icon, label }) => (
-                        <NavLink
-                            key={to}
-                            to={to}
-                            onClick={() => setSidebarOpen(false)}
-                            className={({ isActive }) =>
-                                `flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold transition-all duration-200 ${isActive
-                                    ? 'bg-purple-600 text-white shadow-lg shadow-purple-600/20'
-                                    : 'text-gray-400 hover:bg-white/5 hover:text-white'
-                                }`
-                            }
-                        >
-                            {({ isActive }) => (
-                                <>
-                                    <Icon size={18} strokeWidth={isActive ? 2.5 : 2} />
+                        {/* Desktop nav — glowing pill on active */}
+                        <nav className="hidden md:flex items-center gap-1 bg-white/[0.03] backdrop-blur-sm rounded-xl p-1 border border-white/[0.06]">
+                            {NAV_ITEMS.map(({ to, icon: Icon, label }) => (
+                                <NavLink
+                                    key={to}
+                                    to={to}
+                                    className={({ isActive }) =>
+                                        `flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-300 ${isActive
+                                            ? 'bg-violet-600 text-white shadow-lg shadow-violet-600/30'
+                                            : 'text-slate-400 hover:bg-white/5 hover:text-white'
+                                        }`
+                                    }
+                                >
+                                    <Icon size={15} strokeWidth={2} />
                                     {label}
-                                </>
-                            )}
-                        </NavLink>
-                    ))}
-                </nav>
+                                </NavLink>
+                            ))}
+                        </nav>
 
-                {/* User info + logout */}
-                <div className="p-6 bg-white/5 border-t border-white/5">
-                    <div className="mb-4 px-2">
-                        <p className="text-sm font-bold text-white truncate">{user?.fullName}</p>
-                        <p className="text-[10px] text-gray-500 font-medium truncate mt-0.5">{user?.email}</p>
+                        {/* User + Logout */}
+                        <div className="flex items-center gap-2">
+                            <div className="hidden sm:flex items-center gap-2.5 px-3 py-1.5 rounded-xl bg-white/5 border border-white/10 backdrop-blur-sm">
+                                <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center text-white font-bold text-xs shadow-sm">
+                                    {user?.fullName?.charAt(0) || 'A'}
+                                </div>
+                                <span className="text-sm font-semibold text-slate-300 max-w-[120px] truncate">{user?.fullName}</span>
+                            </div>
+                            <button onClick={handleLogout} className="p-2 rounded-xl text-slate-500 hover:text-red-400 hover:bg-red-500/10 transition-all duration-200" title="Sign out">
+                                <LogOut size={18} />
+                            </button>
+                            <button onClick={() => setMobileMenuOpen(!mobileMenuOpen)} className="md:hidden p-2 rounded-xl text-slate-400 hover:bg-white/10 transition-colors">
+                                {mobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
+                            </button>
+                        </div>
                     </div>
-                    <button
-                        onClick={handleLogout}
-                        className="flex items-center justify-center gap-2 w-full px-4 py-3 text-sm font-bold text-red-400 rounded-xl hover:bg-red-500/10 transition-all duration-200 border border-transparent hover:border-red-500/20"
-                    >
-                        <LogOut size={16} strokeWidth={2.5} />
-                        Sign out
-                    </button>
                 </div>
-            </aside>
 
-            {/* Main content */}
-            <div className="flex-1 flex flex-col min-w-0 overflow-hidden relative">
-                {/* Topbar (mobile) */}
-                <header className="lg:hidden sticky top-0 z-30 flex items-center justify-between px-6 py-4 bg-gray-900 text-white shadow-xl">
-                    <button
-                        onClick={() => setSidebarOpen(true)}
-                        className="w-10 h-10 flex items-center justify-center rounded-xl bg-white/10 text-white"
-                    >
-                        <Menu size={20} />
-                    </button>
-                    <span className="font-black tracking-tight">Admin Console</span>
-                    <div className="w-10" />
-                </header>
-
-                {/* Page content */}
-                <main className="flex-1 overflow-y-auto p-4 md:p-10 lg:p-12 scroll-smooth">
-                    <div className="max-w-7xl mx-auto animate-fade-in">
-                        {children}
+                {/* Mobile Nav */}
+                {mobileMenuOpen && (
+                    <div className="md:hidden border-t border-white/5 bg-gray-950/95 backdrop-blur-2xl px-4 py-3 space-y-1 animate-fade-in-down">
+                        {NAV_ITEMS.map(({ to, icon: Icon, label }) => (
+                            <NavLink
+                                key={to}
+                                to={to}
+                                onClick={() => setMobileMenuOpen(false)}
+                                className={({ isActive }) =>
+                                    `flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition-all ${isActive
+                                        ? 'bg-violet-600/20 text-violet-400 border border-violet-500/20'
+                                        : 'text-slate-400 hover:bg-white/5 hover:text-white'
+                                    }`
+                                }
+                            >
+                                <Icon size={16} />
+                                {label}
+                            </NavLink>
+                        ))}
                     </div>
-                </main>
-            </div>
+                )}
+            </header>
+
+            {/* Content */}
+            <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 page-enter relative z-10">
+                {children}
+            </main>
         </div>
     )
 }

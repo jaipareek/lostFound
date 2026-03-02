@@ -35,7 +35,6 @@ export default function FoundInventory() {
         categoryId: '',
         description: '',
         foundLocation: '',
-        storageLocation: '',
         dateFound: new Date().toISOString().split('T')[0],
         imageUrl: '',
         status: 'AVAILABLE'
@@ -76,7 +75,6 @@ export default function FoundInventory() {
                 categoryId: item.category_id || '',
                 description: item.description || '',
                 foundLocation: item.found_location,
-                storageLocation: item.storage_location || '',
                 dateFound: new Date(item.date_found).toISOString().split('T')[0],
                 imageUrl: item.image_url || '',
                 status: item.status
@@ -88,7 +86,6 @@ export default function FoundInventory() {
                 categoryId: '',
                 description: '',
                 foundLocation: '',
-                storageLocation: '',
                 dateFound: new Date().toISOString().split('T')[0],
                 imageUrl: '',
                 status: 'AVAILABLE'
@@ -114,6 +111,19 @@ export default function FoundInventory() {
 
     const handleSubmit = async (e) => {
         e.preventDefault()
+        // Validations
+        if (!formData.itemName.trim() || formData.itemName.trim().length < 2) {
+            return toast.error('Item name must be at least 2 characters')
+        }
+        if (!formData.dateFound) {
+            return toast.error('Please select the date the item was found')
+        }
+        if (new Date(formData.dateFound) > new Date()) {
+            return toast.error('Date found cannot be in the future')
+        }
+        if (!formData.foundLocation.trim() || formData.foundLocation.trim().length < 2) {
+            return toast.error('Found location must be at least 2 characters')
+        }
         setFormLoading(true)
         try {
             if (editingItem) {
@@ -221,17 +231,17 @@ export default function FoundInventory() {
                                 <div className="absolute top-3 right-3">
                                     <StatusBadge status={item.status} />
                                 </div>
-                                <div className="absolute inset-x-0 bottom-0 p-4 bg-gradient-to-t from-black/50 to-transparent translate-y-full group-hover:translate-y-0 transition-transform duration-300 flex justify-center gap-2">
+                                <div className="absolute inset-x-0 bottom-0 p-4 bg-gradient-to-t from-black/70 to-transparent translate-y-full group-hover:translate-y-0 transition-transform duration-300 flex justify-center gap-3">
                                     <button
                                         onClick={() => handleOpenModal(item)}
-                                        className="p-3 bg-white/90 backdrop-blur-sm text-gray-900 rounded-xl hover:bg-white transition-colors shadow-lg"
+                                        className="p-3 bg-amber-500 text-white rounded-xl hover:bg-amber-400 transition-colors shadow-lg shadow-amber-500/30"
                                         title="Edit Item"
                                     >
                                         <Edit size={16} />
                                     </button>
                                     <button
                                         onClick={() => { setItemToDelete(item); setShowDeleteConfirm(true); }}
-                                        className="p-3 bg-white/90 backdrop-blur-sm text-red-600 rounded-xl hover:bg-white transition-colors shadow-lg"
+                                        className="p-3 bg-red-500 text-white rounded-xl hover:bg-red-400 transition-colors shadow-lg shadow-red-500/30"
                                         title="Delete Item"
                                     >
                                         <Trash2 size={16} />
@@ -263,8 +273,8 @@ export default function FoundInventory() {
                                         </span>
                                     </div>
                                     {item.storage_location && (
-                                        <div className="flex items-center gap-2 text-xs text-secondary-500 font-bold bg-secondary-50/50 px-2 py-1 rounded-lg border border-secondary-100/50">
-                                            <Warehouse size={14} className="text-secondary-400 shrink-0" />
+                                        <div className="flex items-center gap-2 text-xs text-amber-400 font-bold bg-amber-500/10 px-2.5 py-1.5 rounded-lg border border-amber-500/20">
+                                            <Warehouse size={14} className="text-amber-500 shrink-0" />
                                             <span className="truncate">Vault: {item.storage_location}</span>
                                         </div>
                                     )}
@@ -279,87 +289,77 @@ export default function FoundInventory() {
                 </div>
             )}
 
-            {/* Add/Edit Modal */}
             <Modal
                 isOpen={isModalOpen}
                 onClose={() => setIsModalOpen(false)}
                 title={editingItem ? 'Edit Found Item' : 'Add New Found Item'}
-                size="md"
+                size="lg"
             >
-                <form onSubmit={handleSubmit} className="space-y-4">
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <div className="space-y-1 sm:col-span-2">
-                            <label className="text-sm font-medium text-gray-700">Item Name *</label>
-                            <input
-                                required
-                                type="text"
-                                placeholder="e.g. Blue Dell Laptop"
-                                className="input"
-                                value={formData.itemName}
-                                onChange={e => setFormData({ ...formData, itemName: e.target.value })}
-                            />
+                <form onSubmit={handleSubmit} className="space-y-6">
+                    {/* Section: Item Details */}
+                    <div className="space-y-4">
+                        <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest">Item Details</h3>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div className="sm:col-span-2">
+                                <label className="block text-sm font-semibold text-slate-700 mb-1.5">Item Name <span className="text-red-400">*</span></label>
+                                <input
+                                    required type="text" placeholder="e.g. Blue Dell Laptop"
+                                    className="input" value={formData.itemName}
+                                    onChange={e => setFormData({ ...formData, itemName: e.target.value })}
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-semibold text-slate-700 mb-1.5">Category</label>
+                                <select className="input" value={formData.categoryId} onChange={e => setFormData({ ...formData, categoryId: e.target.value })}>
+                                    <option value="">Select Category</option>
+                                    {categories.map(cat => (<option key={cat.id} value={cat.id}>{cat.icon} {cat.name}</option>))}
+                                </select>
+                            </div>
+                            <div>
+                                <label className="block text-sm font-semibold text-slate-700 mb-1.5">Date Found <span className="text-red-400">*</span></label>
+                                <input
+                                    required type="date" className="input" style={{ colorScheme: 'dark' }}
+                                    max={new Date().toISOString().split('T')[0]}
+                                    value={formData.dateFound}
+                                    onChange={e => setFormData({ ...formData, dateFound: e.target.value })}
+                                />
+                            </div>
                         </div>
+                    </div>
 
-                        <div className="space-y-1">
-                            <label className="text-sm font-medium text-gray-700">Category</label>
-                            <select
-                                className="input"
-                                value={formData.categoryId}
-                                onChange={e => setFormData({ ...formData, categoryId: e.target.value })}
-                            >
-                                <option value="">Select Category</option>
-                                {categories.map(cat => (
-                                    <option key={cat.id} value={cat.id}>{cat.icon} {cat.name}</option>
-                                ))}
-                            </select>
-                        </div>
+                    {/* Divider */}
+                    <div className="border-t border-slate-100" />
 
-                        <div className="space-y-1">
-                            <label className="text-sm font-medium text-gray-700">Date Found *</label>
+                    {/* Section: Location */}
+                    <div className="space-y-4">
+                        <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest">Location Info</h3>
+                        <div>
+                            <label className="block text-sm font-semibold text-slate-700 mb-1.5">Found Location <span className="text-red-400">*</span></label>
                             <input
-                                required
-                                type="date"
-                                className="input"
-                                value={formData.dateFound}
-                                onChange={e => setFormData({ ...formData, dateFound: e.target.value })}
-                            />
-                        </div>
-
-                        <div className="space-y-1">
-                            <label className="text-sm font-medium text-gray-700">Found Location *</label>
-                            <input
-                                required
-                                type="text"
-                                placeholder="e.g. Library 2nd Floor"
-                                className="input"
-                                value={formData.foundLocation}
+                                required type="text" placeholder="e.g. Library 2nd Floor"
+                                className="input" value={formData.foundLocation}
                                 onChange={e => setFormData({ ...formData, foundLocation: e.target.value })}
                             />
                         </div>
+                    </div>
 
-                        <div className="space-y-1">
-                            <label className="text-sm font-medium text-gray-700">Storage Location</label>
-                            <input
-                                type="text"
-                                placeholder="e.g. Locker B-12"
-                                className="input"
-                                value={formData.storageLocation}
-                                onChange={e => setFormData({ ...formData, storageLocation: e.target.value })}
-                            />
-                        </div>
+                    {/* Divider */}
+                    <div className="border-t border-slate-100" />
 
-                        <div className="space-y-1 sm:col-span-2">
-                            <label className="text-sm font-medium text-gray-700">Description</label>
+                    {/* Section: Additional */}
+                    <div className="space-y-4">
+                        <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest">Additional Details</h3>
+                        <div>
+                            <label className="block text-sm font-semibold text-slate-700 mb-1.5">Description</label>
                             <textarea
-                                className="input min-h-[80px]"
-                                placeholder="Add any unique marks or details..."
+                                className="input min-h-[90px]"
+                                placeholder="Color, brand, distinguishing marks..."
                                 value={formData.description}
                                 onChange={e => setFormData({ ...formData, description: e.target.value })}
                             />
                         </div>
-
-                        <div className="space-y-1 sm:col-span-2">
-                            <label className="text-sm font-medium text-gray-700">Item Image</label>
+                        <div>
+                            <label className="block text-sm font-semibold text-slate-700 mb-1.5">Item Photo</label>
                             <ImageUpload
                                 value={formData.imageUrl}
                                 onChange={url => setFormData({ ...formData, imageUrl: url })}
@@ -367,33 +367,20 @@ export default function FoundInventory() {
                         </div>
 
                         {editingItem && (
-                            <div className="space-y-1 sm:col-span-2">
-                                <label className="text-sm font-medium text-gray-700">Status</label>
-                                <select
-                                    className="input"
-                                    value={formData.status}
-                                    onChange={e => setFormData({ ...formData, status: e.target.value })}
-                                >
-                                    <option value="AVAILABLE">AVAILABLE</option>
-                                    <option value="CLOSED">CLOSED</option>
+                            <div>
+                                <label className="block text-sm font-semibold text-slate-700 mb-1.5">Status</label>
+                                <select className="input" value={formData.status} onChange={e => setFormData({ ...formData, status: e.target.value })}>
+                                    <option value="AVAILABLE">Available</option>
+                                    <option value="CLOSED">Returned</option>
                                 </select>
                             </div>
                         )}
                     </div>
 
-                    <div className="flex gap-3 pt-2">
-                        <button
-                            type="button"
-                            onClick={() => setIsModalOpen(false)}
-                            className="btn btn-secondary flex-1"
-                        >
-                            Cancel
-                        </button>
-                        <button
-                            type="submit"
-                            disabled={formLoading}
-                            className="btn btn-primary flex-1"
-                        >
+                    {/* Action Buttons */}
+                    <div className="flex gap-3 pt-3 border-t border-slate-100">
+                        <button type="button" onClick={() => setIsModalOpen(false)} className="btn btn-secondary flex-1">Cancel</button>
+                        <button type="submit" disabled={formLoading} className="btn btn-primary flex-1">
                             {formLoading ? 'Saving...' : editingItem ? 'Update Item' : 'Add Item'}
                         </button>
                     </div>

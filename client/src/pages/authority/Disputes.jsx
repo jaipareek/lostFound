@@ -17,7 +17,6 @@ export default function Disputes() {
         setLoading(true)
         try {
             const { data } = await api.get('/claims/disputes')
-            // Only show OPEN disputes by default or label them
             setDisputes(data.disputes || [])
         } catch (err) {
             toast.error('Failed to load disputes')
@@ -48,21 +47,21 @@ export default function Disputes() {
         <div className="space-y-6">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
-                    <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-3">
+                    <h1 className="text-2xl font-bold text-white flex items-center gap-3">
                         <AlertTriangle className="text-orange-500" /> Dispute Cases
                     </h1>
-                    <p className="text-sm text-gray-500 mt-0.5">High-priority cases where multiple students have claimed the same item</p>
+                    <p className="text-sm text-slate-400 mt-0.5">High-priority cases where multiple students have claimed the same item</p>
                 </div>
             </div>
 
             {loading ? (
                 <div className="grid grid-cols-1 gap-8">
                     {Array.from({ length: 2 }).map((_, i) => (
-                        <div key={i} className="h-96 bg-white rounded-[2.5rem] animate-pulse border border-gray-100" />
+                        <div key={i} className="h-96 bg-slate-800/50 rounded-[2.5rem] animate-pulse border border-white/5" />
                     ))}
                 </div>
             ) : disputes.length === 0 ? (
-                <div className="bg-white rounded-[2.5rem] p-12 border border-gray-100 shadow-sm flex flex-col items-center text-center">
+                <div className="bg-slate-800/60 rounded-[2.5rem] p-12 border border-white/8 flex flex-col items-center text-center">
                     <EmptyState
                         icon="🛡️"
                         title="No active disputes"
@@ -72,11 +71,11 @@ export default function Disputes() {
             ) : (
                 <div className="space-y-12">
                     {disputes.map((dispute) => (
-                        <div key={dispute.id} className={`bg-white rounded-[2.5rem] overflow-hidden border ${dispute.status === 'OPEN' ? 'border-orange-200 shadow-orange-100/50' : 'border-gray-200'} shadow-xl transition-all`}>
+                        <div key={dispute.id} className={`bg-slate-800/60 rounded-[2.5rem] overflow-hidden border ${dispute.status === 'OPEN' ? 'border-orange-500/30 shadow-orange-500/5' : 'border-white/8'} shadow-xl transition-all`}>
                             {/* Dispute Header */}
-                            <div className={`px-8 py-6 flex flex-col md:flex-row md:items-center justify-between gap-6 ${dispute.status === 'OPEN' ? 'bg-orange-50/30' : 'bg-gray-50/50'}`}>
+                            <div className={`px-8 py-6 flex flex-col md:flex-row md:items-center justify-between gap-6 ${dispute.status === 'OPEN' ? 'bg-orange-500/5' : 'bg-white/[0.02]'}`}>
                                 <div className="flex items-center gap-5">
-                                    <div className="w-20 h-20 rounded-3xl overflow-hidden bg-white border border-gray-200 shrink-0 shadow-inner p-1">
+                                    <div className="w-20 h-20 rounded-3xl overflow-hidden bg-slate-700/50 border border-white/10 shrink-0 shadow-inner p-1">
                                         {dispute.found_item?.image_url ? (
                                             <img src={dispute.found_item.image_url} alt="" className="w-full h-full object-cover rounded-2xl" />
                                         ) : (
@@ -85,19 +84,19 @@ export default function Disputes() {
                                     </div>
                                     <div>
                                         <div className="flex items-center gap-3">
-                                            <h2 className="text-xl font-black text-gray-900 tracking-tight">{dispute.found_item?.item_name}</h2>
+                                            <h2 className="text-xl font-black text-white tracking-tight">{dispute.found_item?.item_name}</h2>
                                             <StatusBadge status={dispute.status} />
                                         </div>
-                                        <div className="flex flex-wrap items-center gap-4 mt-2 text-[10px] font-black text-gray-400 uppercase tracking-widest">
-                                            <span className="flex items-center gap-1.5"><MapPin size={14} className="text-primary-400" /> {dispute.found_item?.found_location}</span>
-                                            <span className="hidden sm:inline text-gray-200">•</span>
-                                            <span className="flex items-center gap-1.5"><Calendar size={14} className="text-primary-400" /> Flagged {new Date(dispute.created_at).toLocaleDateString()}</span>
+                                        <div className="flex flex-wrap items-center gap-4 mt-2 text-[10px] font-black text-slate-500 uppercase tracking-widest">
+                                            <span className="flex items-center gap-1.5"><MapPin size={14} className="text-amber-400" /> {dispute.found_item?.found_location}</span>
+                                            <span className="hidden sm:inline text-slate-700">•</span>
+                                            <span className="flex items-center gap-1.5"><Calendar size={14} className="text-amber-400" /> Flagged {new Date(dispute.created_at).toLocaleDateString()}</span>
                                         </div>
                                     </div>
                                 </div>
 
                                 {dispute.status === 'OPEN' && (
-                                    <div className="flex items-center gap-3 bg-white px-5 py-3 rounded-2xl border border-orange-200 text-orange-700 shadow-sm">
+                                    <div className="flex items-center gap-3 bg-orange-500/10 px-5 py-3 rounded-2xl border border-orange-500/20 text-orange-400">
                                         <div className="relative">
                                             <ShieldAlert size={20} className="relative z-10" />
                                             <div className="absolute inset-0 bg-orange-400 blur-md opacity-20 animate-pulse"></div>
@@ -108,54 +107,54 @@ export default function Disputes() {
                             </div>
 
                             {/* Side-by-Side Comparison */}
-                            <div className="p-8 bg-white">
+                            <div className="p-8 bg-slate-800/40">
                                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 relative">
                                     {/* VS Divider for desktop */}
-                                    <div className="hidden lg:flex absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-gray-50 border-4 border-white items-center justify-center text-[10px] font-black text-gray-400 z-10 shadow-md">
+                                    <div className="hidden lg:flex absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-slate-700 border-4 border-slate-800 items-center justify-center text-[10px] font-black text-slate-400 z-10 shadow-md">
                                         VS
                                     </div>
 
                                     {dispute.claims?.map((claim, index) => (
-                                        <div key={claim.id} className={`flex flex-col border-2 rounded-[2rem] overflow-hidden transition-all ${claim.status === 'APPROVED' ? 'border-green-200 bg-green-50/10' : 'border-gray-50 hover:border-primary-100'}`}>
-                                            <div className={`px-5 py-4 border-b flex items-center justify-between ${claim.status === 'APPROVED' ? 'bg-green-50/50 border-green-100' : 'bg-gray-50/50 border-gray-100'}`}>
+                                        <div key={claim.id} className={`flex flex-col border-2 rounded-[2rem] overflow-hidden transition-all ${claim.status === 'APPROVED' ? 'border-green-500/30 bg-green-500/5' : 'border-white/8 hover:border-amber-500/20'}`}>
+                                            <div className={`px-5 py-4 border-b flex items-center justify-between ${claim.status === 'APPROVED' ? 'bg-green-500/10 border-green-500/20' : 'bg-slate-700/30 border-white/8'}`}>
                                                 <div className="flex items-center gap-4">
-                                                    <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm ${claim.status === 'APPROVED' ? 'bg-green-100 text-green-700' : 'bg-primary-50 text-primary-600 border border-primary-100'}`}>
+                                                    <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm ${claim.status === 'APPROVED' ? 'bg-green-500/20 text-green-400' : 'bg-amber-500/10 text-amber-400 border border-amber-500/20'}`}>
                                                         {claim.claimant?.full_name?.charAt(0)}
                                                     </div>
                                                     <div>
-                                                        <p className="font-bold text-gray-900 leading-tight">{claim.claimant?.full_name}</p>
-                                                        <p className="text-[10px] text-gray-400 font-black uppercase tracking-widest mt-0.5">ID: {claim.claimant?.student_id}</p>
+                                                        <p className="font-bold text-white leading-tight">{claim.claimant?.full_name}</p>
+                                                        <p className="text-[10px] text-slate-500 font-black uppercase tracking-widest mt-0.5">ID: {claim.claimant?.student_id}</p>
                                                     </div>
                                                 </div>
                                                 {claim.status === 'APPROVED' && (
-                                                    <div className="flex items-center gap-1.5 text-green-700 bg-green-100 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest shadow-sm">
+                                                    <div className="flex items-center gap-1.5 text-green-400 bg-green-500/10 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border border-green-500/20">
                                                         <CheckCircle size={14} /> Winner
                                                     </div>
                                                 )}
                                             </div>
 
                                             <div className="p-6 space-y-6 flex-1">
-                                                <div className="bg-gray-50/80 p-4 rounded-2xl border border-gray-100/50 shadow-inner">
-                                                    <label className="text-[9px] font-black text-primary-400 uppercase tracking-widest block mb-2">Claimant's Proof of Ownership</label>
-                                                    <div className="italic text-sm text-gray-700 font-medium leading-relaxed">
+                                                <div className="bg-slate-700/30 p-4 rounded-2xl border border-white/5">
+                                                    <label className="text-[9px] font-black text-amber-400 uppercase tracking-widest block mb-2">Claimant's Proof of Ownership</label>
+                                                    <div className="italic text-sm text-slate-300 font-medium leading-relaxed">
                                                         "{claim.ownership_proof}"
                                                     </div>
                                                 </div>
 
                                                 <div>
-                                                    <label className="text-[9px] font-black text-gray-400 uppercase tracking-widest block mb-2">Physical Unique Marks</label>
+                                                    <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest block mb-2">Physical Unique Marks</label>
                                                     <div className="flex items-center gap-2">
-                                                        <div className="w-1.5 h-1.5 rounded-full bg-primary-400"></div>
-                                                        <p className="text-sm text-gray-800 font-bold">
+                                                        <div className="w-1.5 h-1.5 rounded-full bg-amber-400"></div>
+                                                        <p className="text-sm text-slate-200 font-bold">
                                                             {claim.unique_marks}
                                                         </p>
                                                     </div>
                                                 </div>
 
                                                 {claim.extra_details && (
-                                                    <div className="bg-blue-50/20 p-4 rounded-2xl border border-blue-50">
+                                                    <div className="bg-blue-500/10 p-4 rounded-2xl border border-blue-500/15">
                                                         <label className="text-[9px] font-black text-blue-400 uppercase tracking-widest block mb-1">Additional Context</label>
-                                                        <p className="text-xs text-gray-500 font-medium italic">
+                                                        <p className="text-xs text-slate-400 font-medium italic">
                                                             {claim.extra_details}
                                                         </p>
                                                     </div>
@@ -163,10 +162,10 @@ export default function Disputes() {
                                             </div>
 
                                             {dispute.status === 'OPEN' && (
-                                                <div className="p-6 mt-auto bg-gray-50/30 border-t border-gray-100/50">
+                                                <div className="p-6 mt-auto bg-slate-700/20 border-t border-white/5">
                                                     <button
                                                         onClick={() => setConfirm({ open: true, claimId: claim.id, itemName: dispute.found_item.item_name })}
-                                                        className="w-full bg-white text-gray-900 border border-gray-200 py-3.5 rounded-2xl text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-primary-600 hover:text-white hover:border-primary-600 hover:shadow-lg shadow-primary-200 transition-all active:scale-[0.98]"
+                                                        className="w-full bg-amber-500 text-white border border-amber-400 py-3.5 rounded-2xl text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-amber-400 hover:shadow-lg hover:shadow-amber-500/20 transition-all active:scale-[0.98]"
                                                     >
                                                         <CheckCircle size={16} /> Resolve Case
                                                     </button>
@@ -178,9 +177,9 @@ export default function Disputes() {
                             </div>
 
                             {dispute.status === 'OPEN' && (
-                                <div className="px-8 py-5 bg-primary-600 text-white flex flex-col sm:flex-row items-center justify-between gap-4">
+                                <div className="px-8 py-5 bg-amber-600 text-white flex flex-col sm:flex-row items-center justify-between gap-4">
                                     <div className="flex items-center gap-3 text-xs font-bold">
-                                        <HelpCircle size={16} className="text-primary-200" />
+                                        <HelpCircle size={16} className="text-amber-200" />
                                         <span>Compare physical signs to identify the true owner. Resolution is permanent.</span>
                                     </div>
                                     <ShieldAlert size={20} className="text-white opacity-20 hidden sm:block" />

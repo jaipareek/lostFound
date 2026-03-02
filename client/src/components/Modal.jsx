@@ -21,10 +21,10 @@ export default function Modal({ isOpen, onClose, title, children, size = 'md' })
 
     const sizeClass = {
         sm: 'max-w-sm',
-        md: 'max-w-lg',
+        md: 'max-w-xl',
         lg: 'max-w-2xl',
         xl: 'max-w-4xl',
-    }[size] || 'max-w-lg'
+    }[size] || 'max-w-xl'
 
     const handleOverlayClick = (e) => {
         if (e.target === overlayRef.current) onClose()
@@ -34,21 +34,21 @@ export default function Modal({ isOpen, onClose, title, children, size = 'md' })
         <div
             ref={overlayRef}
             onClick={handleOverlayClick}
-            className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 animate-fade-in"
+            className="fixed inset-0 z-[200] flex items-center justify-center bg-black/60 backdrop-blur-md p-4 animate-fade-in"
         >
-            <div className={`bg-white rounded-2xl shadow-2xl w-full ${sizeClass} max-h-[90vh] flex flex-col`}>
+            <div className={`modal-content bg-slate-900 rounded-2xl shadow-2xl shadow-black/50 w-full ${sizeClass} max-h-[90vh] flex flex-col animate-fade-in-up border border-white/10`}>
                 {/* Header */}
-                <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200">
-                    <h2 className="text-lg font-semibold text-gray-800">{title}</h2>
+                <div className="flex items-center justify-between px-6 py-5 border-b border-white/10">
+                    <h2 className="text-lg font-bold text-white">{title}</h2>
                     <button
                         onClick={onClose}
-                        className="text-gray-400 hover:text-gray-600 transition-colors p-1 rounded-lg hover:bg-gray-100"
+                        className="w-8 h-8 flex items-center justify-center rounded-lg text-slate-400 hover:text-white transition-colors hover:bg-white/10"
                     >
-                        <X size={20} />
+                        <X size={18} />
                     </button>
                 </div>
                 {/* Body */}
-                <div className="overflow-y-auto flex-1 px-6 py-4">
+                <div className="overflow-y-auto flex-1 px-6 py-5 text-slate-200">
                     {children}
                 </div>
             </div>
