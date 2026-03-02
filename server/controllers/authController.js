@@ -24,7 +24,7 @@ export const login = async (req, res) => {
         })
 
         if (authError) {
-            return res.status(401).json({ message: 'Invalid email or password' })
+            return res.status(401).json({ message: 'Incorrect email or password' })
         }
 
         // Fetch profile to get role

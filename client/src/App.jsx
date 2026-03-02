@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { Toaster } from 'react-hot-toast'
 import { AuthProvider, useAuth } from './context/AuthContext'
+import LandingPage from './pages/LandingPage'
 
 // Layouts
 import StudentLayout from './layouts/StudentLayout'
@@ -50,7 +51,7 @@ const RoleRedirect = () => {
 function AppRoutes() {
     return (
         <Routes>
-            <Route path="/" element={<RoleRedirect />} />
+            <Route path="/" element={<LandingPage />} />
             <Route path="/login" element={<LoginPage />} />
 
             {/* ── Student ── */}
