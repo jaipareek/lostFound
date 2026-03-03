@@ -4,19 +4,13 @@ import { X } from 'lucide-react'
 export default function Modal({ isOpen, onClose, title, children, size = 'md' }) {
     const overlayRef = useRef()
 
-    // Close on Escape key
     useEffect(() => {
         const handler = (e) => { if (e.key === 'Escape') onClose() }
         if (isOpen) document.addEventListener('keydown', handler)
         return () => document.removeEventListener('keydown', handler)
     }, [isOpen, onClose])
 
-    // Prevent body scroll while open
-    useEffect(() => {
-        document.body.style.overflow = isOpen ? 'hidden' : ''
-        return () => { document.body.style.overflow = '' }
-    }, [isOpen])
-
+    // Do NOT set body overflow hidden — let the overlay handle scroll
     if (!isOpen) return null
 
     const sizeClass = {
@@ -36,9 +30,9 @@ export default function Modal({ isOpen, onClose, title, children, size = 'md' })
             onClick={handleOverlayClick}
             className="fixed inset-0 z-[200] flex items-center justify-center bg-black/60 backdrop-blur-md p-4 animate-fade-in"
         >
-            <div className={`modal-content bg-slate-900 rounded-2xl shadow-2xl shadow-black/50 w-full ${sizeClass} max-h-[90vh] flex flex-col animate-fade-in-up border border-white/10`}>
+            <div className={`modal-content bg-slate-900 rounded-2xl shadow-2xl shadow-black/50 w-full ${sizeClass} max-h-[85vh] flex flex-col animate-fade-in-up border border-white/10`}>
                 {/* Header */}
-                <div className="flex items-center justify-between px-6 py-5 border-b border-white/10">
+                <div className="flex items-center justify-between px-6 py-5 border-b border-white/10 shrink-0">
                     <h2 className="text-lg font-bold text-white">{title}</h2>
                     <button
                         onClick={onClose}
@@ -47,8 +41,11 @@ export default function Modal({ isOpen, onClose, title, children, size = 'md' })
                         <X size={18} />
                     </button>
                 </div>
-                {/* Body */}
-                <div className="overflow-y-auto flex-1 px-6 py-5 text-slate-200">
+                {/* Body — scrollable */}
+                <div
+                    className="flex-1 px-6 py-5 text-slate-200"
+                    style={{ overflowY: 'auto' }}
+                >
                     {children}
                 </div>
             </div>

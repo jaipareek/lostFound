@@ -33,31 +33,30 @@ export default function AdminLayout({ children }) {
     }
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-gray-950 via-[#0f0a1a] to-gray-950 font-sans dark-theme">
-            {/* Animated purple glow orbs */}
-            <div className="fixed top-[-10%] right-[-5%] w-[600px] h-[600px] bg-violet-600/[0.05] rounded-full blur-[150px] pointer-events-none animate-breathe" />
-            <div className="fixed bottom-[-10%] left-[-5%] w-[500px] h-[500px] bg-purple-600/[0.04] rounded-full blur-[130px] pointer-events-none animate-pulse-slow" />
-            <div className="fixed top-[40%] left-[50%] w-[300px] h-[300px] bg-indigo-500/[0.03] rounded-full blur-[100px] pointer-events-none" />
+        <div className="min-h-screen bg-[#030712] font-sans dark-theme">
+            {/* Ambient background glows */}
+            <div className="fixed top-[-10%] right-[-5%] w-[600px] h-[600px] bg-violet-600/[0.04] rounded-full blur-[150px] pointer-events-none animate-breathe" />
+            <div className="fixed bottom-[-10%] left-[-5%] w-[500px] h-[500px] bg-indigo-600/[0.03] rounded-full blur-[130px] pointer-events-none animate-pulse-slow" />
 
-            {/* Premium dark glass navbar */}
-            <header className={`sticky top-0 z-50 transition-all duration-500 ${scrolled ? 'bg-gray-950/80 backdrop-blur-2xl shadow-2xl shadow-violet-500/5 border-b border-violet-500/10' : 'bg-gray-950/50 backdrop-blur-xl border-b border-white/5'}`}>
+            {/* Dark glass navbar */}
+            <header className={`sticky top-0 z-50 transition-all duration-500 ${scrolled ? 'bg-slate-950/80 backdrop-blur-2xl shadow-2xl shadow-black/30 border-b border-indigo-500/10' : 'bg-slate-950/60 backdrop-blur-xl border-b border-white/5'}`}>
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="flex items-center justify-between h-16">
                         {/* Logo */}
                         <div className="flex items-center gap-3 shrink-0">
                             <div className="relative group">
-                                <div className="absolute inset-0 bg-gradient-to-br from-violet-500 to-purple-700 rounded-xl blur-md opacity-50 group-hover:opacity-80 transition-opacity" />
-                                <div className="relative w-9 h-9 rounded-xl bg-gradient-to-br from-violet-500 to-purple-700 flex items-center justify-center text-white shadow-lg">
+                                <div className="absolute inset-0 bg-gradient-to-br from-indigo-500 to-violet-600 rounded-xl blur-md opacity-40 group-hover:opacity-70 transition-opacity" />
+                                <div className="relative w-9 h-9 rounded-xl bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center text-white shadow-lg">
                                     <Shield size={17} strokeWidth={2.5} />
                                 </div>
                             </div>
                             <div className="hidden sm:block">
                                 <p className="font-extrabold text-white text-base leading-none tracking-tight">CampusTrace</p>
-                                <p className="text-[9px] uppercase tracking-widest bg-gradient-to-r from-violet-400 to-purple-400 bg-clip-text text-transparent font-bold mt-0.5">Admin</p>
+                                <p className="text-[9px] uppercase tracking-widest bg-gradient-to-r from-indigo-400 to-violet-400 bg-clip-text text-transparent font-bold mt-0.5">Admin</p>
                             </div>
                         </div>
 
-                        {/* Desktop nav — glowing pill on active */}
+                        {/* Desktop nav */}
                         <nav className="hidden md:flex items-center gap-1 bg-white/[0.03] backdrop-blur-sm rounded-xl p-1 border border-white/[0.06]">
                             {NAV_ITEMS.map(({ to, icon: Icon, label }) => (
                                 <NavLink
@@ -65,7 +64,7 @@ export default function AdminLayout({ children }) {
                                     to={to}
                                     className={({ isActive }) =>
                                         `flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-300 ${isActive
-                                            ? 'bg-violet-600 text-white shadow-lg shadow-violet-600/30'
+                                            ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/30'
                                             : 'text-slate-400 hover:bg-white/5 hover:text-white'
                                         }`
                                     }
@@ -79,7 +78,7 @@ export default function AdminLayout({ children }) {
                         {/* User + Logout */}
                         <div className="flex items-center gap-2">
                             <div className="hidden sm:flex items-center gap-2.5 px-3 py-1.5 rounded-xl bg-white/5 border border-white/10 backdrop-blur-sm">
-                                <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center text-white font-bold text-xs shadow-sm">
+                                <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center text-white font-bold text-xs shadow-sm">
                                     {user?.fullName?.charAt(0) || 'A'}
                                 </div>
                                 <span className="text-sm font-semibold text-slate-300 max-w-[120px] truncate">{user?.fullName}</span>
@@ -96,7 +95,7 @@ export default function AdminLayout({ children }) {
 
                 {/* Mobile Nav */}
                 {mobileMenuOpen && (
-                    <div className="md:hidden border-t border-white/5 bg-gray-950/95 backdrop-blur-2xl px-4 py-3 space-y-1 animate-fade-in-down">
+                    <div className="md:hidden border-t border-white/5 bg-slate-950/95 backdrop-blur-2xl px-4 py-3 space-y-1 animate-fade-in-down">
                         {NAV_ITEMS.map(({ to, icon: Icon, label }) => (
                             <NavLink
                                 key={to}
@@ -104,7 +103,7 @@ export default function AdminLayout({ children }) {
                                 onClick={() => setMobileMenuOpen(false)}
                                 className={({ isActive }) =>
                                     `flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition-all ${isActive
-                                        ? 'bg-violet-600/20 text-violet-400 border border-violet-500/20'
+                                        ? 'bg-indigo-600/20 text-indigo-400 border border-indigo-500/20'
                                         : 'text-slate-400 hover:bg-white/5 hover:text-white'
                                     }`
                                 }

@@ -6,7 +6,7 @@ import { supabase } from '../lib/supabase.js'
 // Also auto-detects disputes (2+ claims on same item)
 // ─────────────────────────────────────
 export const submitClaim = async (req, res) => {
-    const { foundItemId, uniqueMarks, ownershipProof, extraDetails } = req.body
+    const { foundItemId, uniqueMarks, ownershipProof, extraDetails, proofImageUrl } = req.body
     const userId = req.user.id
 
     if (!foundItemId || !uniqueMarks || !ownershipProof) {
@@ -32,6 +32,7 @@ export const submitClaim = async (req, res) => {
             unique_marks: uniqueMarks,
             ownership_proof: ownershipProof,
             extra_details: extraDetails || null,
+            proof_image_url: proofImageUrl || null,
             status: 'PENDING',
         })
         .select(`
@@ -278,7 +279,7 @@ export const getPendingClaimsGrouped = async (req, res) => {
             *,
             category:categories(name, icon),
             claims:claims(
-                id, unique_marks, ownership_proof, extra_details, status, created_at,
+                id, unique_marks, ownership_proof, extra_details, proof_image_url, status, created_at,
                 claimant:profiles!claimed_by(full_name, student_id, email)
             )
         `)

@@ -167,6 +167,20 @@ export default function ClaimRequests() {
                                                             </p>
                                                         </div>
 
+                                                        {/* Proof Image */}
+                                                        {claim.proof_image_url && (
+                                                            <div className="bg-slate-700/30 p-4 rounded-2xl border border-white/5">
+                                                                <label className="text-[9px] font-black text-indigo-400 uppercase tracking-widest block mb-2">Proof Image</label>
+                                                                <a href={claim.proof_image_url} target="_blank" rel="noopener noreferrer" className="block">
+                                                                    <img
+                                                                        src={claim.proof_image_url}
+                                                                        alt="Proof"
+                                                                        className="w-full max-h-48 object-cover rounded-xl border border-white/10 hover:opacity-90 transition-opacity cursor-pointer"
+                                                                    />
+                                                                </a>
+                                                            </div>
+                                                        )}
+
                                                         <div className="grid grid-cols-1 gap-4">
                                                             {claim.unique_marks && (
                                                                 <div>

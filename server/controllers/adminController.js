@@ -200,6 +200,69 @@ export const resetUserPassword = async (req, res) => {
 }
 
 // ─────────────────────────────────────
+// PUT /api/admin/users/:id
+// Admin updates a user's profile (name, email, studentId, password)
+// ─────────────────────────────────────
+export const updateUser = async (req, res) => {
+    const { id } = req.params
+    const { fullName, email, studentId, password } = req.body
+    const adminId = req.user.id
+
+    // Check user exists
+    const { data: existing } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', id)
+        .single()
+
+    if (!existing) return res.status(404).json({ message: 'User not found' })
+
+    // Update auth user (email and/or password) if provided
+    const authUpdates = {}
+    if (email && email !== existing.email) authUpdates.email = email
+    if (password && password.length >= 6) authUpdates.password = password
+
+    if (Object.keys(authUpdates).length > 0) {
+        const { error: authError } = await supabase.auth.admin.updateUserById(id, authUpdates)
+        if (authError) {
+            console.error('updateUser auth error:', authError)
+            if (authError.message.includes('already registered') || authError.message.includes('email')) {
+                return res.status(409).json({ message: 'This email is already in use by another account' })
+            }
+            return res.status(500).json({ message: 'Failed to update auth user: ' + authError.message })
+        }
+    }
+
+    // Update profile table
+    const profileUpdates = {}
+    if (fullName) profileUpdates.full_name = fullName
+    if (email) profileUpdates.email = email
+    if (studentId !== undefined) profileUpdates.student_id = studentId || null
+
+    if (Object.keys(profileUpdates).length > 0) {
+        const { error: profileError } = await supabase
+            .from('profiles')
+            .update(profileUpdates)
+            .eq('id', id)
+
+        if (profileError) {
+            console.error('updateUser profile error:', profileError)
+            return res.status(500).json({ message: 'Failed to update user profile' })
+        }
+    }
+
+    await supabase.from('activity_logs').insert({
+        action: 'USER_UPDATED',
+        performed_by: adminId,
+        target_id: id,
+        target_type: 'user',
+        metadata: { updated_fields: Object.keys({ ...profileUpdates, ...(password ? { password: true } : {}) }) },
+    })
+
+    res.json({ message: 'User updated successfully' })
+}
+
+// ─────────────────────────────────────
 // DELETE /api/admin/users/:id
 // Admin deletes a user account entirely
 // ─────────────────────────────────────

@@ -65,16 +65,16 @@ export default function StudentInventory() {
             {/* Page header */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6">
                 <div>
-                    <h1 className="text-3xl font-black text-gray-900 tracking-tight">
-                        <span className="gradient-text">Public Inventory</span>
+                    <h1 className="text-3xl font-black text-white tracking-tight">
+                        Public Inventory
                     </h1>
-                    <p className="text-sm text-gray-500 mt-1 font-medium">
+                    <p className="text-sm text-slate-400 mt-1 font-medium">
                         {loading ? 'Searching campus vault...' : `Found ${total} item${total !== 1 ? 's' : ''} in the inventory`}
                     </p>
                 </div>
 
                 {/* Status filter tabs */}
-                <div className="flex p-1 bg-gray-100/80 backdrop-blur-sm rounded-2xl border border-gray-200/50 self-start sm:self-center">
+                <div className="flex p-1 bg-slate-800/50 backdrop-blur-sm rounded-xl border border-white/5 self-start sm:self-center">
                     {[
                         { id: 'AVAILABLE', label: 'In Vault' },
                         { id: 'CLOSED', label: 'Returned' },
@@ -83,9 +83,9 @@ export default function StudentInventory() {
                         <button
                             key={s.id}
                             onClick={() => setStatusFilter(s.id)}
-                            className={`px-4 py-2 text-xs font-black uppercase tracking-widest rounded-xl transition-all ${statusFilter === s.id
-                                ? 'bg-white text-primary-600 shadow-sm'
-                                : 'text-gray-500 hover:text-gray-900'
+                            className={`px-4 py-2 text-xs font-bold uppercase tracking-wider rounded-lg transition-all ${statusFilter === s.id
+                                ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/20'
+                                : 'text-slate-500 hover:text-white hover:bg-white/5'
                                 }`}
                         >
                             {s.label}
@@ -97,7 +97,7 @@ export default function StudentInventory() {
             {/* Search + Category filter */}
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-end">
                 <div className="lg:col-span-5">
-                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1 mb-2 block">Quick Search</label>
+                    <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1 mb-2 block">Quick Search</label>
                     <SearchBar
                         value={search}
                         onChange={setSearch}

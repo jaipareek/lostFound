@@ -53,36 +53,36 @@ export default function ReportLost() {
     }
 
     return (
-        <div className="max-w-3xl mx-auto space-y-10">
+        <div className="max-w-3xl mx-auto space-y-8">
             {/* Header */}
             <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-6">
                 <div>
-                    <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary-50 text-primary-600 text-[10px] font-black uppercase tracking-widest mb-4">
-                        <FileText size={14} /> Official Documentation
+                    <div className="inline-flex items-center gap-2 px-3 py-1 rounded-lg bg-indigo-500/10 text-indigo-400 text-[10px] font-bold uppercase tracking-widest mb-4 border border-indigo-500/20">
+                        <FileText size={14} /> Report Form
                     </div>
-                    <h1 className="text-4xl font-black text-gray-900 tracking-tight">
-                        Report <span className="gradient-text">Lost Asset</span>
+                    <h1 className="text-3xl font-black text-white tracking-tight">
+                        Report <span className="text-indigo-400">Lost Item</span>
                     </h1>
-                    <p className="text-gray-500 mt-2 font-medium">Record the disappearance of your item in the campus ledger.</p>
+                    <p className="text-slate-400 mt-2 font-medium text-sm">Record the details of your missing item.</p>
                 </div>
-                <div className="bg-white/50 backdrop-blur-sm border border-orange-100 p-4 rounded-2xl flex gap-3 text-orange-800 shadow-sm max-w-xs">
-                    <Info className="shrink-0 text-orange-500" size={18} />
-                    <p className="text-[10px] font-bold leading-tight">
-                        Double check the <button onClick={() => navigate('/student/inventory')} className="underline text-orange-600">Inventory</button> first. Your item might already be in the vault!
+                <div className="bg-amber-500/10 border border-amber-500/20 p-4 rounded-xl flex gap-3 max-w-xs">
+                    <Info className="shrink-0 text-amber-400" size={18} />
+                    <p className="text-[11px] font-semibold leading-tight text-amber-300">
+                        Check the <button onClick={() => navigate('/student/inventory')} className="underline text-amber-400 hover:text-amber-300">Inventory</button> first. Your item might already be found!
                     </p>
                 </div>
             </div>
 
             {/* Form */}
-            <div className="bg-white rounded-[3rem] p-10 shadow-xl border border-gray-100 shadow-gray-200/50">
+            <div className="bg-slate-800/60 rounded-2xl p-8 sm:p-10 border border-white/8">
                 <form onSubmit={handleSubmit} className="space-y-8">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                         {/* Primary Info */}
                         <div className="space-y-6">
                             <div className="space-y-2">
-                                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1 block">Item Identity <span className="text-red-500">*</span></label>
+                                <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1 block">Item Name <span className="text-red-400">*</span></label>
                                 <div className="relative group">
-                                    <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-gray-400 group-focus-within:text-primary-500 transition-colors">
+                                    <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-600 group-focus-within:text-indigo-400 transition-colors">
                                         <Package size={18} />
                                     </div>
                                     <input
@@ -91,17 +91,17 @@ export default function ReportLost() {
                                         value={form.itemName}
                                         onChange={update('itemName')}
                                         placeholder="e.g. MacBook Air M2 Space Grey"
-                                        className="w-full bg-gray-50/50 border border-gray-100 rounded-2xl pl-12 pr-5 py-4 text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500/10 focus:border-primary-500/30 transition-all font-bold"
+                                        className="w-full bg-slate-900/60 border border-white/10 rounded-xl pl-12 pr-5 py-3.5 text-white placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500/40 transition-all font-semibold"
                                     />
                                 </div>
                             </div>
 
                             <div className="space-y-2">
-                                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1 block">Classification</label>
+                                <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1 block">Category</label>
                                 <select
                                     value={form.categoryId}
                                     onChange={update('categoryId')}
-                                    className="w-full bg-gray-50/50 border border-gray-100 rounded-2xl px-5 py-4 text-gray-900 focus:outline-none focus:ring-2 focus:ring-primary-500/10 focus:border-primary-500/30 transition-all font-bold appearance-none cursor-pointer"
+                                    className="w-full bg-slate-900/60 border border-white/10 rounded-xl px-5 py-3.5 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500/40 transition-all font-semibold appearance-none cursor-pointer"
                                 >
                                     <option value="">Uncategorized</option>
                                     {categories.map((c) => (
@@ -111,13 +111,13 @@ export default function ReportLost() {
                             </div>
 
                             <div className="space-y-2">
-                                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1 block">Contextual Details</label>
+                                <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1 block">Description</label>
                                 <textarea
                                     value={form.description}
                                     onChange={update('description')}
                                     rows={4}
                                     placeholder="Add specific marks, stickers, or contents that help identify the item..."
-                                    className="w-full bg-gray-50/50 border border-gray-100 rounded-2xl px-5 py-4 text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500/10 focus:border-primary-500/30 transition-all font-medium resize-none"
+                                    className="w-full bg-slate-900/60 border border-white/10 rounded-xl px-5 py-3.5 text-white placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500/40 transition-all font-medium resize-none"
                                 />
                             </div>
                         </div>
@@ -125,9 +125,9 @@ export default function ReportLost() {
                         {/* Location & Time */}
                         <div className="space-y-6">
                             <div className="space-y-2">
-                                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1 block">Last Known Location <span className="text-red-500">*</span></label>
+                                <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1 block">Last Known Location <span className="text-red-400">*</span></label>
                                 <div className="relative group">
-                                    <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-gray-400 group-focus-within:text-primary-500 transition-colors">
+                                    <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-600 group-focus-within:text-indigo-400 transition-colors">
                                         <MapPin size={18} />
                                     </div>
                                     <input
@@ -136,15 +136,15 @@ export default function ReportLost() {
                                         value={form.lostLocation}
                                         onChange={update('lostLocation')}
                                         placeholder="e.g. Science Block, 3rd Floor"
-                                        className="w-full bg-gray-50/50 border border-gray-100 rounded-2xl pl-12 pr-5 py-4 text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500/10 focus:border-primary-500/30 transition-all font-bold"
+                                        className="w-full bg-slate-900/60 border border-white/10 rounded-xl pl-12 pr-5 py-3.5 text-white placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500/40 transition-all font-semibold"
                                     />
                                 </div>
                             </div>
 
                             <div className="space-y-2">
-                                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1 block">Incident Timestamp <span className="text-red-500">*</span></label>
+                                <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1 block">When did you lose it? <span className="text-red-400">*</span></label>
                                 <div className="relative group">
-                                    <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-gray-400 group-focus-within:text-primary-500 transition-colors">
+                                    <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-600 group-focus-within:text-indigo-400 transition-colors">
                                         <Calendar size={18} />
                                     </div>
                                     <input
@@ -153,15 +153,16 @@ export default function ReportLost() {
                                         value={form.lostDatetime}
                                         onChange={update('lostDatetime')}
                                         max={new Date().toISOString().slice(0, 16)}
-                                        className="w-full bg-gray-50/50 border border-gray-100 rounded-2xl pl-12 pr-5 py-4 text-gray-900 focus:outline-none focus:ring-2 focus:ring-primary-500/10 focus:border-primary-500/30 transition-all font-bold cursor-pointer"
+                                        className="w-full bg-slate-900/60 border border-white/10 rounded-xl pl-12 pr-5 py-3.5 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500/40 transition-all font-semibold cursor-pointer"
+                                        style={{ colorScheme: 'dark' }}
                                     />
                                 </div>
                             </div>
 
                             {/* Image Upload */}
                             <div className="space-y-2">
-                                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1 block">Visual Evidence <span className="text-gray-400">(Optional)</span></label>
-                                <div className="bg-gray-50/30 border border-dashed border-gray-200 rounded-[2rem] p-3">
+                                <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1 block">Photo <span className="text-slate-600">(Optional)</span></label>
+                                <div className="bg-slate-700/30 border border-dashed border-white/10 rounded-xl p-3">
                                     <ImageUpload
                                         value={form.imageUrl}
                                         onChange={(url) => setForm((f) => ({ ...f, imageUrl: url || '' }))}
@@ -172,37 +173,33 @@ export default function ReportLost() {
                     </div>
 
                     {/* Actions */}
-                    <div className="flex flex-col sm:flex-row gap-4 pt-6 border-t border-gray-50">
+                    <div className="flex flex-col sm:flex-row gap-3 pt-6 border-t border-white/5">
                         <button
                             type="button"
                             onClick={() => navigate(-1)}
-                            className="flex-1 flex items-center justify-center gap-2 px-8 py-4 bg-gray-100 text-gray-600 rounded-2xl font-black uppercase tracking-widest text-xs hover:bg-gray-200 transition-all"
+                            className="flex-1 flex items-center justify-center gap-2 px-8 py-3.5 bg-slate-700/40 text-slate-400 rounded-xl font-bold text-xs uppercase tracking-wider border border-white/5 hover:bg-slate-700/60 hover:text-slate-300 transition-all"
                         >
-                            <X size={18} /> Discard Draft
+                            <X size={16} /> Cancel
                         </button>
                         <button
                             type="submit"
                             disabled={loading}
-                            className="flex-[2] flex items-center justify-center gap-3 px-8 py-4 bg-primary-600 text-white rounded-2xl font-black uppercase tracking-widest text-xs hover:bg-primary-700 shadow-xl shadow-primary-200 transition-all disabled:opacity-50"
+                            className="flex-[2] flex items-center justify-center gap-2 px-8 py-3.5 bg-indigo-600 text-white rounded-xl font-bold text-xs uppercase tracking-wider hover:bg-indigo-500 hover:shadow-lg hover:shadow-indigo-500/20 transition-all disabled:opacity-50 active:scale-[0.98]"
                         >
                             {loading ? (
                                 <span className="flex items-center gap-2">
                                     <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-                                    Transmitting...
+                                    Submitting...
                                 </span>
                             ) : (
                                 <>
-                                    <Send size={18} /> Broadcast Report
+                                    <Send size={16} /> Submit Report
                                 </>
                             )}
                         </button>
                     </div>
                 </form>
             </div>
-
-            <p className="text-center text-[10px] font-black text-gray-300 uppercase tracking-[0.2em]">
-                Secure Entry #{(Math.random() * 100000).toFixed(0)} • Campus Safety Protocol
-            </p>
         </div>
     )
 }

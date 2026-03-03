@@ -37,51 +37,44 @@ export default function AuthorityLayout({ children }) {
     }
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 font-sans dark-theme">
-            {/* Animated background accents */}
-            <div className="fixed top-0 right-0 w-[600px] h-[600px] bg-amber-500/[0.04] rounded-full blur-[150px] pointer-events-none animate-pulse-slow" />
-            <div className="fixed bottom-0 left-0 w-[500px] h-[500px] bg-orange-500/[0.03] rounded-full blur-[130px] pointer-events-none animate-breathe" />
+        <div className="min-h-screen bg-[#030712] font-sans dark-theme">
+            {/* Ambient background glows */}
+            <div className="fixed top-[-15%] right-[-5%] w-[600px] h-[600px] bg-indigo-600/[0.04] rounded-full blur-[150px] pointer-events-none animate-pulse-slow" />
+            <div className="fixed bottom-[-10%] left-[-5%] w-[500px] h-[500px] bg-violet-600/[0.03] rounded-full blur-[130px] pointer-events-none animate-breathe" />
 
             {/* Dark glass navbar */}
-            <header className={`sticky top-0 z-50 transition-all duration-500 ${scrolled ? 'bg-slate-900/80 backdrop-blur-2xl shadow-2xl shadow-black/20 border-b border-amber-500/10' : 'bg-slate-900/60 backdrop-blur-xl border-b border-white/5'}`}>
+            <header className={`sticky top-0 z-50 transition-all duration-500 ${scrolled ? 'bg-slate-950/80 backdrop-blur-2xl shadow-2xl shadow-black/30 border-b border-indigo-500/10' : 'bg-slate-950/60 backdrop-blur-xl border-b border-white/5'}`}>
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="flex items-center justify-between h-16">
                         {/* Logo */}
                         <div className="flex items-center gap-3 shrink-0">
                             <div className="relative group">
-                                <div className="absolute inset-0 bg-gradient-to-br from-amber-400 to-orange-600 rounded-xl blur-md opacity-50 group-hover:opacity-80 transition-opacity" />
-                                <div className="relative w-9 h-9 rounded-xl bg-gradient-to-br from-amber-400 to-orange-600 flex items-center justify-center text-white shadow-lg">
+                                <div className="absolute inset-0 bg-gradient-to-br from-indigo-500 to-violet-600 rounded-xl blur-md opacity-40 group-hover:opacity-70 transition-opacity" />
+                                <div className="relative w-9 h-9 rounded-xl bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center text-white shadow-lg">
                                     <Warehouse size={17} strokeWidth={2.5} />
                                 </div>
                             </div>
                             <div className="hidden sm:block">
                                 <p className="font-extrabold text-white text-base leading-none tracking-tight">CampusTrace</p>
-                                <p className="text-[9px] uppercase tracking-widest bg-gradient-to-r from-amber-400 to-orange-400 bg-clip-text text-transparent font-bold mt-0.5">Authority</p>
+                                <p className="text-[9px] uppercase tracking-widest bg-gradient-to-r from-indigo-400 to-violet-400 bg-clip-text text-transparent font-bold mt-0.5">Authority</p>
                             </div>
                         </div>
 
-                        {/* Desktop nav with underline-glow active */}
-                        <nav className="hidden md:flex items-center gap-0.5">
+                        {/* Desktop nav */}
+                        <nav className="hidden md:flex items-center gap-1 bg-white/[0.03] backdrop-blur-sm rounded-xl p-1 border border-white/[0.06]">
                             {NAV_ITEMS.map(({ to, icon: Icon, label }) => (
                                 <NavLink
                                     key={to}
                                     to={to}
                                     className={({ isActive }) =>
-                                        `relative flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-300 ${isActive
-                                            ? 'text-amber-400 bg-amber-500/10'
+                                        `flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-300 ${isActive
+                                            ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/30'
                                             : 'text-slate-400 hover:bg-white/5 hover:text-white'
                                         }`
                                     }
                                 >
-                                    {({ isActive }) => (
-                                        <>
-                                            <Icon size={15} strokeWidth={2} />
-                                            {label}
-                                            {isActive && (
-                                                <span className="absolute bottom-0 left-3 right-3 h-0.5 bg-gradient-to-r from-amber-400 to-orange-500 rounded-full" />
-                                            )}
-                                        </>
-                                    )}
+                                    <Icon size={15} strokeWidth={2} />
+                                    {label}
                                 </NavLink>
                             ))}
                         </nav>
@@ -89,7 +82,7 @@ export default function AuthorityLayout({ children }) {
                         {/* User + Logout */}
                         <div className="flex items-center gap-2">
                             <div className="hidden sm:flex items-center gap-2.5 px-3 py-1.5 rounded-xl bg-white/5 border border-white/10 backdrop-blur-sm">
-                                <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center text-white font-bold text-xs shadow-sm">
+                                <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center text-white font-bold text-xs shadow-sm">
                                     {user?.fullName?.charAt(0) || 'A'}
                                 </div>
                                 <span className="text-sm font-semibold text-slate-300 max-w-[120px] truncate">{user?.fullName}</span>
@@ -106,7 +99,7 @@ export default function AuthorityLayout({ children }) {
 
                 {/* Mobile Nav */}
                 {mobileMenuOpen && (
-                    <div className="md:hidden border-t border-white/5 bg-slate-900/95 backdrop-blur-2xl px-4 py-3 space-y-1 animate-fade-in-down">
+                    <div className="md:hidden border-t border-white/5 bg-slate-950/95 backdrop-blur-2xl px-4 py-3 space-y-1 animate-fade-in-down">
                         {NAV_ITEMS.map(({ to, icon: Icon, label }) => (
                             <NavLink
                                 key={to}
@@ -114,7 +107,7 @@ export default function AuthorityLayout({ children }) {
                                 onClick={() => setMobileMenuOpen(false)}
                                 className={({ isActive }) =>
                                     `flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition-all ${isActive
-                                        ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20'
+                                        ? 'bg-indigo-600/20 text-indigo-400 border border-indigo-500/20'
                                         : 'text-slate-400 hover:bg-white/5 hover:text-white'
                                     }`
                                 }
@@ -127,7 +120,7 @@ export default function AuthorityLayout({ children }) {
                 )}
             </header>
 
-            {/* Content with subtle light overlay */}
+            {/* Content */}
             <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 page-enter relative z-10">
                 {children}
             </main>

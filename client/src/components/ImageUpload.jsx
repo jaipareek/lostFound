@@ -20,7 +20,6 @@ export default function ImageUpload({ value, onChange }) {
 
         setLoading(true)
         try {
-            // Build FormData and POST to our Express server
             const formData = new FormData()
             formData.append('file', file)
 
@@ -66,12 +65,12 @@ export default function ImageUpload({ value, onChange }) {
                     <img
                         src={preview}
                         alt="Preview"
-                        className="w-full max-h-48 object-cover rounded-lg border border-gray-200"
+                        className="w-full max-h-48 object-cover rounded-xl border border-white/10"
                     />
                     <button
                         type="button"
                         onClick={handleRemove}
-                        className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600 shadow"
+                        className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600 shadow-lg"
                     >
                         <X size={14} />
                     </button>
@@ -81,19 +80,22 @@ export default function ImageUpload({ value, onChange }) {
                     onDrop={handleDrop}
                     onDragOver={(e) => e.preventDefault()}
                     onClick={() => inputRef.current?.click()}
-                    className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center cursor-pointer hover:border-primary-400 hover:bg-primary-50 transition-colors"
+                    className="border-2 border-dashed border-white/10 rounded-xl p-6 text-center cursor-pointer hover:border-indigo-500/30 hover:bg-indigo-500/5 transition-colors"
                 >
                     {loading ? (
-                        <p className="text-sm text-primary-600 font-medium">Uploading...</p>
+                        <div className="flex flex-col items-center gap-2">
+                            <div className="w-5 h-5 border-2 border-indigo-500/30 border-t-indigo-400 rounded-full animate-spin" />
+                            <p className="text-sm text-indigo-400 font-medium">Uploading...</p>
+                        </div>
                     ) : (
                         <>
                             <div className="flex justify-center mb-2">
-                                <Image size={32} className="text-gray-400" />
+                                <Image size={28} className="text-slate-600" />
                             </div>
-                            <p className="text-sm text-gray-600">
-                                <span className="text-primary-600 font-medium">Click to upload</span> or drag & drop
+                            <p className="text-sm text-slate-400">
+                                <span className="text-indigo-400 font-medium">Click to upload</span> or drag & drop
                             </p>
-                            <p className="text-xs text-gray-400 mt-1">PNG, JPG, WEBP up to 5MB</p>
+                            <p className="text-xs text-slate-600 mt-1">PNG, JPG, WEBP up to 5MB</p>
                         </>
                     )}
                 </div>

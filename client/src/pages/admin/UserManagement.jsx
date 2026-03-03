@@ -17,7 +17,8 @@ import {
     UserCheck,
     ShieldAlert,
     Search,
-    Filter
+    Filter,
+    Pencil
 } from 'lucide-react'
 
 export default function UserManagement() {
@@ -37,6 +38,16 @@ export default function UserManagement() {
 
     const [updating, setUpdating] = useState(false)
     const [creating, setCreating] = useState(false)
+
+    // State for Edit User
+    const [showEditModal, setShowEditModal] = useState(false)
+    const [editUser, setEditUser] = useState(null)
+    const [editForm, setEditForm] = useState({
+        fullName: '',
+        email: '',
+        studentId: '',
+        password: ''
+    })
 
     // State for Create User
     const [showCreateModal, setShowCreateModal] = useState(false)
@@ -127,6 +138,38 @@ export default function UserManagement() {
         setSelectedUser(user)
         setNewRole(user.role)
         setShowRoleModal(true)
+    }
+
+    const openEditModal = (user) => {
+        setEditUser(user)
+        setEditForm({
+            fullName: user.full_name || '',
+            email: user.email || '',
+            studentId: user.student_id || '',
+            password: ''
+        })
+        setShowEditModal(true)
+    }
+
+    const handleEditUser = async (e) => {
+        e.preventDefault()
+        setUpdating(true)
+        try {
+            const payload = {
+                fullName: editForm.fullName,
+                email: editForm.email,
+                studentId: editForm.studentId,
+            }
+            if (editForm.password) payload.password = editForm.password
+            await api.put(`/admin/users/${editUser.id}`, payload)
+            toast.success('User updated successfully')
+            setShowEditModal(false)
+            fetchUsers()
+        } catch (err) {
+            toast.error(err.response?.data?.message || 'Failed to update user')
+        } finally {
+            setUpdating(false)
+        }
     }
 
     return (
@@ -228,6 +271,13 @@ export default function UserManagement() {
                                         <td className="px-6 py-4 text-right">
                                             <div className="flex items-center justify-end gap-2 md:opacity-0 group-hover:opacity-100 transition-opacity">
                                                 <button
+                                                    onClick={() => openEditModal(user)}
+                                                    className="p-2 text-gray-400 hover:text-indigo-400 hover:bg-indigo-500/10 rounded-xl transition-all"
+                                                    title="Edit User"
+                                                >
+                                                    <Pencil size={18} />
+                                                </button>
+                                                <button
                                                     onClick={() => openRoleModal(user)}
                                                     className="p-2 text-gray-400 hover:text-primary-600 hover:bg-primary-50 rounded-xl transition-all"
                                                     title="Change Role"
@@ -299,10 +349,16 @@ export default function UserManagement() {
                                 </div>
                                 <div className="flex gap-2">
                                     <button
+                                        onClick={() => openEditModal(user)}
+                                        className="flex-1 flex items-center justify-center gap-2 py-2.5 bg-slate-700/40 border border-white/10 rounded-xl text-xs font-bold text-indigo-400 active:bg-indigo-500/10 transition-colors"
+                                    >
+                                        <Pencil size={14} /> Edit
+                                    </button>
+                                    <button
                                         onClick={() => openRoleModal(user)}
                                         className="flex-1 flex items-center justify-center gap-2 py-2.5 bg-white border border-gray-200 rounded-xl text-xs font-bold text-gray-700 active:bg-gray-50 transition-colors"
                                     >
-                                        <Shield size={14} /> Change Role
+                                        <Shield size={14} /> Role
                                     </button>
                                     <button
                                         onClick={() => { setUserToDelete(user); setShowDeleteConfirm(true) }}
@@ -479,6 +535,87 @@ export default function UserManagement() {
                                 className="flex-1 py-3.5 bg-primary-600 hover:bg-primary-500 text-white rounded-xl font-bold uppercase tracking-widest text-[10px] shadow-lg shadow-primary-900/20 transition-all disabled:opacity-50"
                             >
                                 {creating ? 'Establishing...' : 'Execute Creation'}
+                            </button>
+                        </div>
+                    </form>
+                </Modal>
+            )}
+
+            {/* Edit User Modal */}
+            {showEditModal && editUser && (
+                <Modal isOpen={showEditModal} onClose={() => setShowEditModal(false)} title="Edit User Profile">
+                    <form onSubmit={handleEditUser} className="space-y-5">
+                        <div className="p-4 bg-slate-800/60 rounded-xl flex items-center gap-4 border border-white/8">
+                            <div className="w-12 h-12 rounded-full bg-indigo-500/10 flex items-center justify-center text-xl font-bold text-indigo-400 border border-indigo-500/20">
+                                {editUser.full_name?.charAt(0)}
+                            </div>
+                            <div>
+                                <p className="font-bold text-white">{editUser.full_name}</p>
+                                <p className="text-xs text-slate-400">Role: <span className="uppercase">{editUser.role}</span></p>
+                            </div>
+                        </div>
+
+                        <div className="space-y-2">
+                            <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Full Name</label>
+                            <input
+                                type="text"
+                                required
+                                className="input"
+                                placeholder="Full Name"
+                                value={editForm.fullName}
+                                onChange={(e) => setEditForm({ ...editForm, fullName: e.target.value })}
+                            />
+                        </div>
+
+                        <div className="space-y-2">
+                            <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Email Address</label>
+                            <input
+                                type="email"
+                                required
+                                className="input"
+                                placeholder="Email"
+                                value={editForm.email}
+                                onChange={(e) => setEditForm({ ...editForm, email: e.target.value })}
+                            />
+                        </div>
+
+                        <div className="space-y-2">
+                            <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Student ID / Register Number</label>
+                            <input
+                                type="text"
+                                className="input"
+                                placeholder="e.g. 2024CS101"
+                                value={editForm.studentId}
+                                onChange={(e) => setEditForm({ ...editForm, studentId: e.target.value })}
+                            />
+                        </div>
+
+                        <div className="space-y-2">
+                            <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">New Password <span className="text-slate-600">(leave blank to keep current)</span></label>
+                            <input
+                                type="password"
+                                className="input"
+                                placeholder="Min 6 characters"
+                                minLength={6}
+                                value={editForm.password}
+                                onChange={(e) => setEditForm({ ...editForm, password: e.target.value })}
+                            />
+                        </div>
+
+                        <div className="flex gap-3 pt-2">
+                            <button
+                                type="button"
+                                onClick={() => setShowEditModal(false)}
+                                className="flex-1 btn-secondary py-3"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                type="submit"
+                                disabled={updating}
+                                className="flex-1 btn-primary py-3 flex items-center justify-center gap-2"
+                            >
+                                {updating ? 'Saving...' : 'Save Changes'}
                             </button>
                         </div>
                     </form>
