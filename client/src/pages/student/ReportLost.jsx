@@ -1,12 +1,13 @@
-﻿import { useState, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import api from '../../lib/axios'
 import toast from 'react-hot-toast'
 import ImageUpload from '../../components/ImageUpload'
 import { FileText, MapPin, Calendar, Info, Send, X, Package } from 'lucide-react'
 
-export default function ReportLost() {
+export default function ReportLost({ variant = 'page', onClose, onSuccess }) {
     const navigate = useNavigate()
+    const isModal = variant === 'modal'
     const [categories, setCategories] = useState([])
     const [loading, setLoading] = useState(false)
     const [form, setForm] = useState({
@@ -44,7 +45,8 @@ export default function ReportLost() {
             })
 
             toast.success('Lost report submitted successfully!')
-            navigate('/student/my-reports')
+            if (isModal && onSuccess) onSuccess()
+            else navigate('/student/my-reports')
         } catch (err) {
             toast.error(err.response?.data?.message || 'Failed to submit report')
         } finally {
@@ -52,26 +54,52 @@ export default function ReportLost() {
         }
     }
 
+    const handleInventoryClick = () => {
+        if (isModal && onClose) {
+            onClose()
+            navigate('/student/inventory')
+        } else {
+            navigate('/student/inventory')
+        }
+    }
+
+    const handleCancel = () => {
+        if (isModal && onClose) onClose()
+        else navigate(-1)
+    }
+
     return (
-        <div className="max-w-3xl mx-auto space-y-8">
-            {/* Header */}
-            <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-6">
-                <div>
-                    <div className="inline-flex items-center gap-2 px-3 py-1 rounded-lg bg-indigo-500/10 text-indigo-400 text-[10px] font-bold uppercase tracking-widest mb-4 border border-indigo-500/20">
-                        <FileText size={14} /> Report Form
+        <div className={isModal ? 'space-y-5' : 'max-w-3xl mx-auto space-y-8'}>
+            {/* Header — page mode only */}
+            {!isModal && (
+                <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-6">
+                    <div>
+                        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-lg bg-indigo-500/10 text-indigo-400 text-[10px] font-bold uppercase tracking-widest mb-4 border border-indigo-500/20">
+                            <FileText size={14} /> Report Form
+                        </div>
+                        <h1 className="text-3xl font-black text-white tracking-tight">
+                            Report <span className="text-indigo-400">Lost Item</span>
+                        </h1>
+                        <p className="text-slate-400 mt-2 font-medium text-sm">Record the details of your missing item.</p>
                     </div>
-                    <h1 className="text-3xl font-black text-white tracking-tight">
-                        Report <span className="text-indigo-400">Lost Item</span>
-                    </h1>
-                    <p className="text-slate-400 mt-2 font-medium text-sm">Record the details of your missing item.</p>
+                    <div className="bg-amber-500/10 border border-amber-500/20 p-4 rounded-xl flex gap-3 max-w-xs">
+                        <Info className="shrink-0 text-amber-400" size={18} />
+                        <p className="text-[11px] font-semibold leading-tight text-amber-300">
+                            Check the <button type="button" onClick={() => navigate('/student/inventory')} className="underline text-amber-400 hover:text-amber-300">Inventory</button> first. Your item might already be found!
+                        </p>
+                    </div>
                 </div>
-                <div className="bg-amber-500/10 border border-amber-500/20 p-4 rounded-xl flex gap-3 max-w-xs">
-                    <Info className="shrink-0 text-amber-400" size={18} />
+            )}
+
+            {/* Amber tip — modal mode (compact) */}
+            {isModal && (
+                <div className="bg-amber-500/10 border border-amber-500/20 p-3 rounded-xl flex gap-3">
+                    <Info className="shrink-0 text-amber-400" size={16} />
                     <p className="text-[11px] font-semibold leading-tight text-amber-300">
-                        Check the <button onClick={() => navigate('/student/inventory')} className="underline text-amber-400 hover:text-amber-300">Inventory</button> first. Your item might already be found!
+                        Check the <button type="button" onClick={handleInventoryClick} className="underline text-amber-400 hover:text-amber-300">Inventory</button> first. Your item might already be found!
                     </p>
                 </div>
-            </div>
+            )}
 
             {/* Form */}
             <div className="bg-slate-800/60 rounded-2xl p-8 sm:p-10 border border-white/8">
@@ -176,7 +204,7 @@ export default function ReportLost() {
                     <div className="flex flex-col sm:flex-row gap-3 pt-6 border-t border-white/5">
                         <button
                             type="button"
-                            onClick={() => navigate(-1)}
+                            onClick={handleCancel}
                             className="flex-1 flex items-center justify-center gap-2 px-8 py-3.5 bg-slate-700/40 text-slate-400 rounded-xl font-bold text-xs uppercase tracking-wider border border-white/5 hover:bg-slate-700/60 hover:text-slate-300 transition-all"
                         >
                             <X size={16} /> Cancel

@@ -1,12 +1,11 @@
 import { NavLink, useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import toast from 'react-hot-toast'
-import { Search, FileText, ClipboardList, LogOut, Menu, X } from 'lucide-react'
+import { Search, ClipboardList, LogOut, Menu, X } from 'lucide-react'
 import { useState, useEffect } from 'react'
 
 const NAV_ITEMS = [
     { to: '/student/inventory', icon: Search, label: 'Found Items' },
-    { to: '/student/report-lost', icon: FileText, label: 'Report Lost' },
     { to: '/student/my-reports', icon: ClipboardList, label: 'My Reports' },
 ]
 

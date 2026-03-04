@@ -1,10 +1,12 @@
-﻿import { useState, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import api from '../../lib/axios'
 import toast from 'react-hot-toast'
 import StatusBadge from '../../components/StatusBadge'
 import ConfirmDialog from '../../components/ConfirmDialog'
 import EmptyState from '../../components/EmptyState'
+import Modal from '../../components/Modal'
+import ReportLost from './ReportLost'
 import { MapPin, Calendar, X, Plus, FileText, Hand } from 'lucide-react'
 
 export default function MyReports() {
@@ -16,6 +18,7 @@ export default function MyReports() {
     const [closingId, setClosingId] = useState(null)
     const [confirmOpen, setConfirmOpen] = useState(false)
     const [closeLoading, setCloseLoading] = useState(false)
+    const [reportModalOpen, setReportModalOpen] = useState(false)
 
     const fetchAll = async () => {
         setLoading(true)
@@ -66,7 +69,7 @@ export default function MyReports() {
                     <p className="text-sm text-slate-400 mt-0.5">Track your lost item reports and claims</p>
                 </div>
                 <button
-                    onClick={() => navigate('/student/report-lost')}
+                    onClick={() => setReportModalOpen(true)}
                     className="flex items-center gap-2 px-5 py-2.5 bg-indigo-600 text-white text-sm font-semibold rounded-xl hover:bg-indigo-500 hover:shadow-lg hover:shadow-indigo-500/20 transition-all active:scale-95"
                 >
                     <Plus size={16} /> Report Lost Item
@@ -110,7 +113,7 @@ export default function MyReports() {
                                 icon="📄"
                                 title="You haven't reported any lost items yet"
                                 description="If you've lost something, check the inventory first, then file a report."
-                                action={{ label: '+ Report Lost Item', onClick: () => navigate('/student/report-lost') }}
+                                action={{ label: '+ Report Lost Item', onClick: () => setReportModalOpen(true) }}
                             />
                         </div>
                     ) : (
@@ -289,6 +292,23 @@ export default function MyReports() {
                     )}
                 </div>
             )}
+
+            {/* Report Lost modal */}
+            <Modal
+                isOpen={reportModalOpen}
+                onClose={() => setReportModalOpen(false)}
+                title="Report Lost Item"
+                size="xl"
+            >
+                <ReportLost
+                    variant="modal"
+                    onClose={() => setReportModalOpen(false)}
+                    onSuccess={() => {
+                        setReportModalOpen(false)
+                        fetchAll()
+                    }}
+                />
+            </Modal>
 
             {/* Confirm close dialog */}
             <ConfirmDialog

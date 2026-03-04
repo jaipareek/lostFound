@@ -24,8 +24,6 @@ export default function Modal({ isOpen, onClose, title, children, size = 'md' })
         if (e.target === overlayRef.current) onClose()
     }
 
-    // Use createPortal to render at document.body level
-    // This escapes any parent stacking contexts (z-index issues)
     return createPortal(
         <div
             ref={overlayRef}
