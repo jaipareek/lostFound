@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react'
+import { createPortal } from 'react-dom'
 import { X } from 'lucide-react'
 
 export default function Modal({ isOpen, onClose, title, children, size = 'md' }) {
@@ -10,7 +11,6 @@ export default function Modal({ isOpen, onClose, title, children, size = 'md' })
         return () => document.removeEventListener('keydown', handler)
     }, [isOpen, onClose])
 
-    // Do NOT set body overflow hidden — let the overlay handle scroll
     if (!isOpen) return null
 
     const sizeClass = {
@@ -24,13 +24,18 @@ export default function Modal({ isOpen, onClose, title, children, size = 'md' })
         if (e.target === overlayRef.current) onClose()
     }
 
-    return (
+    // Use createPortal to render at document.body level
+    // This escapes any parent stacking contexts (z-index issues)
+    return createPortal(
         <div
             ref={overlayRef}
             onClick={handleOverlayClick}
-            className="fixed inset-0 z-[200] flex items-center justify-center bg-black/60 backdrop-blur-md p-4 animate-fade-in"
+            className="fixed inset-0 flex items-center justify-center bg-black/60 backdrop-blur-md p-4"
+            style={{ zIndex: 9999 }}
         >
-            <div className={`modal-content bg-slate-900 rounded-2xl shadow-2xl shadow-black/50 w-full ${sizeClass} max-h-[85vh] flex flex-col animate-fade-in-up border border-white/10`}>
+            <div
+                className={`modal-content bg-slate-900 rounded-2xl shadow-2xl shadow-black/50 w-full ${sizeClass} max-h-[85vh] flex flex-col border border-white/10 animate-fade-in-up`}
+            >
                 {/* Header */}
                 <div className="flex items-center justify-between px-6 py-5 border-b border-white/10 shrink-0">
                     <h2 className="text-lg font-bold text-white">{title}</h2>
@@ -49,6 +54,7 @@ export default function Modal({ isOpen, onClose, title, children, size = 'md' })
                     {children}
                 </div>
             </div>
-        </div>
+        </div>,
+        document.body
     )
 }
