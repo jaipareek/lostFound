@@ -1,6 +1,7 @@
 import express from 'express'
 import { verifyToken, isStudent, isAuthority, isAuthorityOrAdmin, isAdmin } from '../middleware/authMiddleware.js'
 import {
+    checkMatches,
     createLostReport,
     getAllLostReports,
     getMyLostReports,
@@ -14,6 +15,9 @@ const router = express.Router()
 
 // All routes require auth
 router.use(verifyToken)
+
+// Student: check for similar reports & inventory matches (before submitting)
+router.post('/check-matches', isStudent, checkMatches)
 
 // Student: submit a lost report
 router.post('/', isStudent, createLostReport)

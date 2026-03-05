@@ -1,11 +1,78 @@
 import { supabase } from '../lib/supabase.js'
 
 // ─────────────────────────────────────
+// POST /api/lost-reports/check-matches
+// Student: check for similar reports & inventory matches
+// before submitting a new report
+// ─────────────────────────────────────
+export const checkMatches = async (req, res) => {
+    const { itemName, categoryId } = req.body
+
+    if (!itemName || itemName.trim().length < 3) {
+        return res.json({ similarReports: [], inventoryMatches: [] })
+    }
+
+    // Split item name into keywords (ignore short words like "a", "my", "the")
+    const stopWords = new Set(['a', 'an', 'the', 'my', 'is', 'of', 'in', 'at', 'to', 'for', 'and', 'or'])
+    const keywords = itemName
+        .toLowerCase()
+        .split(/\s+/)
+        .filter(w => w.length >= 2 && !stopWords.has(w))
+
+    if (keywords.length === 0) {
+        return res.json({ similarReports: [], inventoryMatches: [] })
+    }
+
+    // Build OR filter: item_name matches ANY keyword
+    const ilikeFilters = keywords.map(kw => `item_name.ilike.%${kw}%`).join(',')
+
+    try {
+        // 1. Check similar lost reports (status = REPORTED, not by this user)
+        let reportQuery = supabase
+            .from('lost_reports')
+            .select('id, item_name, lost_location, created_at, category:categories(name, icon)')
+            .eq('status', 'REPORTED')
+            .neq('reported_by', req.user.id)
+            .or(ilikeFilters)
+            .order('created_at', { ascending: false })
+            .limit(5)
+
+        if (categoryId) {
+            reportQuery = reportQuery.eq('category_id', categoryId)
+        }
+
+        // 2. Check inventory matches (status = AVAILABLE)
+        let inventoryQuery = supabase
+            .from('found_items')
+            .select('id, item_name, found_location, image_url, date_found, category:categories(name, icon)')
+            .eq('status', 'AVAILABLE')
+            .or(ilikeFilters)
+            .order('created_at', { ascending: false })
+            .limit(5)
+
+        if (categoryId) {
+            inventoryQuery = inventoryQuery.eq('category_id', categoryId)
+        }
+
+        // Run both queries in parallel
+        const [reportResult, inventoryResult] = await Promise.all([reportQuery, inventoryQuery])
+
+        res.json({
+            similarReports: reportResult.data || [],
+            inventoryMatches: inventoryResult.data || [],
+        })
+    } catch (err) {
+        console.error('checkMatches error:', err)
+        res.json({ similarReports: [], inventoryMatches: [] })
+    }
+}
+
+// ─────────────────────────────────────
 // POST /api/lost-reports
 // Student submits a lost item report
 // ─────────────────────────────────────
 export const createLostReport = async (req, res) => {
-    const { itemName, categoryId, description, lostLocation, lostDatetime, imageUrl } = req.body
+    const { itemName, categoryId, description, lostLocation, locationId, lostDatetime, imageUrl } = req.body
     const userId = req.user.id
 
     if (!itemName || !lostLocation || !lostDatetime) {
@@ -19,6 +86,7 @@ export const createLostReport = async (req, res) => {
             category_id: categoryId || null,
             description: description || null,
             lost_location: lostLocation,
+            location_id: locationId || null,
             lost_datetime: lostDatetime,
             image_url: imageUrl || null,
             reported_by: userId,

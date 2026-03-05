@@ -11,6 +11,7 @@ import categories from './routes/categories.js'
 import logs from './routes/logs.js'
 import adminRoutes from './routes/admin.js'
 import uploadRoute from './routes/upload.js'
+import locations from './routes/locations.js'
 
 dotenv.config()
 
@@ -31,6 +32,7 @@ app.use('/api/lost-reports', lostReports)
 app.use('/api/found-items', foundItems)
 app.use('/api/claims', claims)
 app.use('/api/categories', categories)
+app.use('/api/locations', locations)
 app.use('/api/logs', logs)
 app.use('/api/admin', adminRoutes)
 app.use('/api/upload', uploadRoute)

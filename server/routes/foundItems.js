@@ -1,10 +1,13 @@
 import express from 'express'
 import { verifyToken, isAuthority, isAuthorityOrAdmin } from '../middleware/authMiddleware.js'
-import { createFoundItem, getAllFoundItems, getFoundItemById, updateFoundItem, deleteFoundItem } from '../controllers/foundItemController.js'
+import { checkLostReportMatches, createFoundItem, getAllFoundItems, getFoundItemById, updateFoundItem, deleteFoundItem } from '../controllers/foundItemController.js'
 
 const router = express.Router()
 
 router.use(verifyToken)
+
+// Authority: check lost reports for matching items (before adding)
+router.post('/check-matches', isAuthorityOrAdmin, checkLostReportMatches)
 
 // Everyone sees inventory (students, authority, admin)
 router.get('/', getAllFoundItems)

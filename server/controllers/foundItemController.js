@@ -1,11 +1,62 @@
 import { supabase } from '../lib/supabase.js'
 
 // ─────────────────────────────────────
+// POST /api/found-items/check-matches
+// Authority: check lost reports for matching items
+// before adding a new found item to inventory
+// ─────────────────────────────────────
+export const checkLostReportMatches = async (req, res) => {
+    const { itemName, categoryId } = req.body
+
+    if (!itemName || itemName.trim().length < 3) {
+        return res.json({ matchingReports: [] })
+    }
+
+    const stopWords = new Set(['a', 'an', 'the', 'my', 'is', 'of', 'in', 'at', 'to', 'for', 'and', 'or'])
+    const keywords = itemName
+        .toLowerCase()
+        .split(/\s+/)
+        .filter(w => w.length >= 2 && !stopWords.has(w))
+
+    if (keywords.length === 0) {
+        return res.json({ matchingReports: [] })
+    }
+
+    const ilikeFilters = keywords.map(kw => `item_name.ilike.%${kw}%`).join(',')
+
+    try {
+        let query = supabase
+            .from('lost_reports')
+            .select('id, item_name, lost_location, lost_datetime, created_at, description, category:categories(name, icon), reporter:profiles!reported_by(full_name, student_id)')
+            .eq('status', 'REPORTED')
+            .or(ilikeFilters)
+            .order('created_at', { ascending: false })
+            .limit(5)
+
+        if (categoryId) {
+            query = query.eq('category_id', categoryId)
+        }
+
+        const { data, error } = await query
+
+        if (error) {
+            console.error('checkLostReportMatches error:', error)
+            return res.json({ matchingReports: [] })
+        }
+
+        res.json({ matchingReports: data || [] })
+    } catch (err) {
+        console.error('checkLostReportMatches error:', err)
+        res.json({ matchingReports: [] })
+    }
+}
+
+// ─────────────────────────────────────
 // POST /api/found-items
 // Authority: add a found item to inventory
 // ─────────────────────────────────────
 export const createFoundItem = async (req, res) => {
-    const { itemName, categoryId, description, foundLocation, dateFound, imageUrl, storageLocation } = req.body
+    const { itemName, categoryId, description, foundLocation, locationId, dateFound, imageUrl, storageLocation } = req.body
     const userId = req.user.id
 
     if (!itemName || !foundLocation || !dateFound) {
@@ -19,6 +70,7 @@ export const createFoundItem = async (req, res) => {
             category_id: categoryId || null,
             description: description || null,
             found_location: foundLocation,
+            location_id: locationId || null,
             date_found: dateFound,
             image_url: imageUrl || null,
             storage_location: storageLocation || null,
