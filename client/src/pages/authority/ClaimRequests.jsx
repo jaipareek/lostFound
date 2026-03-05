@@ -48,9 +48,12 @@ export default function ClaimRequests() {
             if (confirm.action === 'approve') {
                 await api.patch(`/claims/${confirm.id}/approve`)
                 toast.success('Claim approved! Item closed and others rejected.')
-            } else {
+            } else if (confirm.action === 'reject') {
                 await api.patch(`/claims/${confirm.id}/reject`)
                 toast.success('Claim rejected')
+            } else if (confirm.action === 'request-info') {
+                await api.patch(`/claims/${confirm.id}/request-info`)
+                toast.success('Requested additional information')
             }
             setConfirm({ open: false, id: null, action: '', itemName: '' })
             fetchRequests()
@@ -154,8 +157,15 @@ export default function ClaimRequests() {
                                                                 <p className="text-[9px] text-slate-500 font-black uppercase tracking-widest mt-0.5">ID: {claim.claimant?.student_id}</p>
                                                             </div>
                                                         </div>
-                                                        <div className="text-[10px] font-black text-slate-500 uppercase tracking-widest bg-slate-700/50 px-2 py-1 rounded-lg">
-                                                            {new Date(claim.created_at).toLocaleDateString()}
+                                                        <div className="flex flex-col items-end gap-1">
+                                                            <div className="text-[10px] font-black text-slate-500 uppercase tracking-widest bg-slate-700/50 px-2 py-1 rounded-lg">
+                                                                {new Date(claim.created_at).toLocaleDateString()}
+                                                            </div>
+                                                            {claim.info_requested && (
+                                                                <span className="text-[9px] font-black text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded-md border border-amber-500/20 uppercase tracking-widest">
+                                                                    Info Requested
+                                                                </span>
+                                                            )}
                                                         </div>
                                                     </div>
 
@@ -207,6 +217,13 @@ export default function ClaimRequests() {
                                                             <XCircle size={14} /> Reject
                                                         </button>
                                                         <button
+                                                            onClick={() => askAction(claim.id, 'request-info', item.item_name)}
+                                                            className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-[10px] font-black text-amber-400 hover:bg-amber-500/10 transition-all uppercase tracking-widest border border-amber-500/20"
+                                                            disabled={claim.info_requested}
+                                                        >
+                                                            <Info size={14} /> {claim.info_requested ? 'Info Requested' : 'Request Info'}
+                                                        </button>
+                                                        <button
                                                             onClick={() => askAction(claim.id, 'approve', item.item_name)}
                                                             className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-[10px] font-black text-white bg-emerald-600 hover:bg-emerald-500 hover:shadow-lg hover:shadow-emerald-500/20 transition-all uppercase tracking-widest"
                                                         >
@@ -229,13 +246,14 @@ export default function ClaimRequests() {
                     isOpen={confirm.open}
                     onClose={() => setConfirm({ ...confirm, open: false })}
                     onConfirm={handleAction}
-                    title={confirm.action === 'approve' ? 'Approve Claim?' : 'Reject Claim?'}
+                    title={confirm.action === 'approve' ? 'Approve Claim?' : confirm.action === 'reject' ? 'Reject Claim?' : 'Request More Info?'}
                     message={
                         confirm.action === 'approve'
                             ? `Approving this claim for "${confirm.itemName}" will automatically REJECT all other pending claims for this item and mark the item as CLOSED. Are you sure?`
-                            : `Are you sure you want to reject this claim for "${confirm.itemName}"?`
+                            : confirm.action === 'reject' ? `Are you sure you want to reject this claim for "${confirm.itemName}"?`
+                                : `Are you sure you want to request more information for this claim on "${confirm.itemName}"? The student will be able to edit their claim.`
                     }
-                    confirmLabel={confirm.action === 'approve' ? 'Yes, Approve' : 'Yes, Reject'}
+                    confirmLabel={confirm.action === 'approve' ? 'Yes, Approve' : confirm.action === 'reject' ? 'Yes, Reject' : 'Request Info'}
                     danger={confirm.action === 'reject'}
                     loading={processing}
                 />

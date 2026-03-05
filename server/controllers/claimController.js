@@ -93,7 +93,92 @@ export const getMyClaims = async (req, res) => {
         .order('created_at', { ascending: false })
 
     if (error) return res.status(500).json({ message: 'Failed to fetch claims' })
-    res.json({ claims: data })
+
+    // Fetch activity_logs for these claims where action is 'CLAIM_INFO_REQUESTED'
+    const claimIds = data.map(c => c.id)
+    let infoRequestedLogs = []
+
+    if (claimIds.length > 0) {
+        const { data: logs } = await supabase
+            .from('activity_logs')
+            .select('target_id, action')
+            .in('target_id', claimIds)
+            .eq('action', 'CLAIM_INFO_REQUESTED')
+            .eq('target_type', 'claim')
+
+        if (logs) {
+            infoRequestedLogs = logs
+        }
+    }
+
+    // Add info_requested flag
+    const formattedClaims = data.map(claim => {
+        const hasInfoRequest = infoRequestedLogs.some(log => log.target_id === claim.id)
+        return {
+            ...claim,
+            info_requested: hasInfoRequest
+        }
+    })
+
+    res.json({ claims: formattedClaims })
+}
+
+// ─────────────────────────────────────
+// PUT /api/claims/:id
+// Student: update their own pending claim
+// ─────────────────────────────────────
+export const updateClaim = async (req, res) => {
+    const { id } = req.params
+    const { uniqueMarks, ownershipProof, extraDetails, proofImageUrl } = req.body
+    const userId = req.user.id
+
+    // Check if claim exists and belongs to user
+    const { data: claim, error: fetchError } = await supabase
+        .from('claims')
+        .select('id, claimed_by, status, found_item_id')
+        .eq('id', id)
+        .single()
+
+    if (fetchError || !claim) return res.status(404).json({ message: 'Claim not found' })
+    if (claim.claimed_by !== userId) return res.status(403).json({ message: 'Not authorized to edit this claim' })
+    if (claim.status !== 'PENDING') return res.status(400).json({ message: `Cannot edit a claim that is ${claim.status}` })
+
+    // Update claim
+    const updateData = {
+        unique_marks: uniqueMarks !== undefined ? uniqueMarks : claim.unique_marks,
+        ownership_proof: ownershipProof !== undefined ? ownershipProof : claim.ownership_proof,
+        extra_details: extraDetails !== undefined ? extraDetails : claim.extra_details,
+        proof_image_url: proofImageUrl !== undefined ? proofImageUrl : claim.proof_image_url
+    }
+
+    const { data: updatedClaim, error: updateError } = await supabase
+        .from('claims')
+        .update(updateData)
+        .eq('id', id)
+        .select()
+        .single()
+
+    if (updateError) {
+        console.error('updateClaim error:', updateError)
+        return res.status(500).json({ message: 'Failed to update claim' })
+    }
+
+    // Delete any 'CLAIM_INFO_REQUESTED' logs for this claim so it doesn't stay flagged
+    await supabase.from('activity_logs')
+        .delete()
+        .eq('target_type', 'claim')
+        .eq('target_id', id)
+        .eq('action', 'CLAIM_INFO_REQUESTED')
+
+    await supabase.from('activity_logs').insert({
+        action: 'CLAIM_UPDATED',
+        performed_by: userId,
+        target_id: claim.found_item_id,
+        target_type: 'claim',
+        metadata: { claim_id: id }
+    })
+
+    res.json({ message: 'Claim updated successfully', claim: updatedClaim })
 }
 
 // ─────────────────────────────────────
@@ -220,9 +305,34 @@ export const rejectClaim = async (req, res) => {
 }
 
 // ─────────────────────────────────────
-// GET /api/disputes
-// Authority: view all open disputes
+// PATCH /api/claims/:id/request-info
+// Authority: request more info for a single claim
 // ─────────────────────────────────────
+export const requestMoreInfo = async (req, res) => {
+    const { id } = req.params
+
+    const { data: claim } = await supabase
+        .from('claims')
+        .select('id, status')
+        .eq('id', id)
+        .single()
+
+    if (!claim) return res.status(404).json({ message: 'Claim not found' })
+    if (claim.status !== 'PENDING') {
+        return res.status(400).json({ message: `Claim is already ${claim.status}` })
+    }
+
+    // We keep status as PENDING, but create an Activity Log that acts as the flag
+    await supabase.from('activity_logs').insert({
+        action: 'CLAIM_INFO_REQUESTED',
+        performed_by: req.user.id,
+        target_id: id,
+        target_type: 'claim',
+    })
+
+    res.json({ message: 'Requested additional information. The student has been notified.', claim })
+}
+
 // ─────────────────────────────────────
 // GET /api/disputes
 // Authority: view all open disputes
@@ -264,7 +374,7 @@ export const getPendingClaimsGrouped = async (req, res) => {
     const { data: itemsWithPending } = await supabase
         .from('claims')
         .select('found_item_id')
-        .eq('status', 'PENDING')
+        .in('status', ['PENDING'])
 
     if (!itemsWithPending || itemsWithPending.length === 0) {
         return res.json({ items: [] })
@@ -284,7 +394,7 @@ export const getPendingClaimsGrouped = async (req, res) => {
             )
         `)
         .in('id', itemIds)
-        .eq('claims.status', 'PENDING') // This filters the nested claims!
+        .in('claims.status', ['PENDING']) // This filters the nested claims!
         .order('created_at', { ascending: false })
 
     if (error) {
@@ -292,5 +402,41 @@ export const getPendingClaimsGrouped = async (req, res) => {
         return res.status(500).json({ message: 'Failed to fetch claim requests' })
     }
 
-    res.json({ items: data })
+    // Collect all claim IDs across all items
+    const allClaimIds = []
+    data.forEach(item => {
+        if (item.claims) {
+            item.claims.forEach(c => allClaimIds.push(c.id))
+        }
+    })
+
+    let infoRequestedLogs = []
+    if (allClaimIds.length > 0) {
+        const { data: logs } = await supabase
+            .from('activity_logs')
+            .select('target_id, action')
+            .in('target_id', allClaimIds)
+            .eq('action', 'CLAIM_INFO_REQUESTED')
+            .eq('target_type', 'claim')
+
+        if (logs) {
+            infoRequestedLogs = logs
+        }
+    }
+
+    // Process nested claims to add info_requested flag
+    const formattedData = data.map(item => {
+        return {
+            ...item,
+            claims: item.claims ? item.claims.map(claim => {
+                const hasInfoRequest = infoRequestedLogs.some(log => log.target_id === claim.id)
+                return {
+                    ...claim,
+                    info_requested: hasInfoRequest
+                }
+            }) : []
+        }
+    })
+
+    res.json({ items: formattedData })
 }

@@ -103,7 +103,7 @@ create table public.claims (
   ownership_proof text not null,
   extra_details   text,
   status          text not null default 'PENDING'
-                    check (status in ('PENDING', 'APPROVED', 'REJECTED')),
+                    check (status in ('PENDING', 'APPROVED', 'REJECTED', 'MORE_INFO_REQUIRED')),
   reviewed_by     uuid references public.profiles(id),
   created_at      timestamptz default now(),
   updated_at      timestamptz default now(),
