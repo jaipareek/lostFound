@@ -7,6 +7,7 @@ import ConfirmDialog from '../../components/ConfirmDialog'
 import EmptyState from '../../components/EmptyState'
 import Modal from '../../components/Modal'
 import ReportLost from './ReportLost'
+import EditClaimModal from '../../components/EditClaimModal'
 import { MapPin, Calendar, X, Plus, FileText, Hand } from 'lucide-react'
 
 export default function MyReports() {
@@ -19,6 +20,7 @@ export default function MyReports() {
     const [confirmOpen, setConfirmOpen] = useState(false)
     const [closeLoading, setCloseLoading] = useState(false)
     const [reportModalOpen, setReportModalOpen] = useState(false)
+    const [editClaimObj, setEditClaimObj] = useState(null)
 
     const fetchAll = async () => {
         setLoading(true)
@@ -258,7 +260,14 @@ export default function MyReports() {
                                                 </p>
                                             </div>
                                         </div>
-                                        <StatusBadge status={c.status} />
+                                        <div className="flex flex-col items-end gap-1">
+                                            <StatusBadge status={c.status} />
+                                            {c.info_requested && (
+                                                <span className="text-[9px] font-black text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded-md border border-amber-500/20 uppercase tracking-widest">
+                                                    Info Requested
+                                                </span>
+                                            )}
+                                        </div>
                                     </div>
 
                                     <div className="bg-slate-700/30 p-4 rounded-xl border border-white/5 mb-4 flex-1">
@@ -286,12 +295,37 @@ export default function MyReports() {
                                         <span>Submitted</span>
                                         <span>{new Date(c.created_at).toLocaleDateString()}</span>
                                     </div>
+                                    {c.info_requested && c.status === 'PENDING' && (
+                                        <div className="mt-4 space-y-2">
+                                            <div className="bg-amber-500/10 border border-amber-500/20 p-3 rounded-xl flex items-start gap-2 text-amber-500/90 text-xs">
+                                                <Hand size={14} className="shrink-0 mt-0.5" />
+                                                <p>The authority has requested more information or clearer proof for this claim.</p>
+                                            </div>
+                                            <button
+                                                onClick={() => setEditClaimObj(c)}
+                                                className="w-full py-2.5 bg-amber-500/10 text-amber-400 rounded-xl text-xs font-bold uppercase tracking-wider border border-amber-500/20 hover:bg-amber-500/20 transition-colors"
+                                            >
+                                                Edit Claim
+                                            </button>
+                                        </div>
+                                    )}
                                 </div>
                             ))}
                         </div>
                     )}
                 </div>
             )}
+
+            {/* Edit Claim modal */}
+            <EditClaimModal
+                isOpen={!!editClaimObj}
+                onClose={() => setEditClaimObj(null)}
+                claim={editClaimObj}
+                onSuccess={() => {
+                    setEditClaimObj(null)
+                    fetchAll()
+                }}
+            />
 
             {/* Report Lost modal */}
             <Modal
