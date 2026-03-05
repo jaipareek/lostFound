@@ -1,12 +1,13 @@
 import { NavLink, useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import toast from 'react-hot-toast'
-import { Users, Tag, ScrollText, Trash2, LogOut, Menu, X, Shield } from 'lucide-react'
+import { Users, Tag, ScrollText, Trash2, LogOut, Menu, X, Shield, MapPin } from 'lucide-react'
 import { useState, useEffect } from 'react'
 
 const NAV_ITEMS = [
     { to: '/admin/users', icon: Users, label: 'Users' },
     { to: '/admin/categories', icon: Tag, label: 'Categories' },
+    { to: '/admin/locations', icon: MapPin, label: 'Locations' },
     { to: '/admin/logs', icon: ScrollText, label: 'Logs' },
     { to: '/admin/reports', icon: Trash2, label: 'Moderate' },
 ]

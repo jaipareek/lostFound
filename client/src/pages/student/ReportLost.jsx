@@ -1,45 +1,94 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import api from '../../lib/axios'
 import toast from 'react-hot-toast'
 import ImageUpload from '../../components/ImageUpload'
-import { FileText, MapPin, Calendar, Info, Send, X, Package } from 'lucide-react'
+import { FileText, MapPin, Calendar, Info, Send, X, Package, AlertTriangle, Sparkles, ExternalLink, ChevronDown, ChevronUp } from 'lucide-react'
 
 export default function ReportLost({ variant = 'page', onClose, onSuccess }) {
     const navigate = useNavigate()
     const isModal = variant === 'modal'
     const [categories, setCategories] = useState([])
+    const [locations, setLocations] = useState([])
     const [loading, setLoading] = useState(false)
     const [form, setForm] = useState({
         itemName: '',
         categoryId: '',
         description: '',
-        lostLocation: '',
+        locationId: '',
+        specificLocation: '',
         lostDatetime: '',
         imageUrl: '',
     })
 
+    // Smart Match state
+    const [matches, setMatches] = useState({ similarReports: [], inventoryMatches: [] })
+    const [matchLoading, setMatchLoading] = useState(false)
+    const [matchesDismissed, setMatchesDismissed] = useState(false)
+    const [showReports, setShowReports] = useState(true)
+    const [showInventory, setShowInventory] = useState(true)
+    const debounceRef = useRef(null)
+
     useEffect(() => {
         api.get('/categories').then(({ data }) => setCategories(data.categories || []))
+        api.get('/locations').then(({ data }) => setLocations(data.locations || []))
     }, [])
+
+    // Debounced match checking
+    const checkForMatches = useCallback(async (itemName, categoryId) => {
+        if (!itemName || itemName.trim().length < 3) {
+            setMatches({ similarReports: [], inventoryMatches: [] })
+            return
+        }
+
+        setMatchLoading(true)
+        try {
+            const { data } = await api.post('/lost-reports/check-matches', {
+                itemName: itemName.trim(),
+                categoryId: categoryId || null,
+            })
+            setMatches(data)
+            setMatchesDismissed(false)
+        } catch {
+            // Silently fail — this is a nice-to-have feature
+        } finally {
+            setMatchLoading(false)
+        }
+    }, [])
+
+    // Trigger match check when itemName or categoryId changes
+    useEffect(() => {
+        if (debounceRef.current) clearTimeout(debounceRef.current)
+        debounceRef.current = setTimeout(() => {
+            checkForMatches(form.itemName, form.categoryId)
+        }, 600)
+        return () => { if (debounceRef.current) clearTimeout(debounceRef.current) }
+    }, [form.itemName, form.categoryId, checkForMatches])
 
     const update = (field) => (e) =>
         setForm((f) => ({ ...f, [field]: e.target.value }))
 
     const handleSubmit = async (e) => {
         e.preventDefault()
-        if (!form.itemName || !form.lostLocation || !form.lostDatetime) {
+        if (!form.itemName || !form.locationId || !form.lostDatetime) {
             toast.error('Please fill in all required fields')
             return
         }
 
+        // Build lostLocation string: "Location Name — specific details"
+        const selectedLoc = locations.find(l => l.id === form.locationId)
+        const locationText = selectedLoc
+            ? (form.specificLocation ? `${selectedLoc.name} — ${form.specificLocation}` : selectedLoc.name)
+            : form.specificLocation || 'Unknown'
+
         setLoading(true)
         try {
-            const { data } = await api.post('/lost-reports', {
+            await api.post('/lost-reports', {
                 itemName: form.itemName,
                 categoryId: form.categoryId || null,
                 description: form.description,
-                lostLocation: form.lostLocation,
+                lostLocation: locationText,
+                locationId: form.locationId || null,
                 lostDatetime: form.lostDatetime,
                 imageUrl: form.imageUrl || null,
             })
@@ -67,6 +116,8 @@ export default function ReportLost({ variant = 'page', onClose, onSuccess }) {
         if (isModal && onClose) onClose()
         else navigate(-1)
     }
+
+    const hasMatches = matches.similarReports.length > 0 || matches.inventoryMatches.length > 0
 
     return (
         <div className={isModal ? 'space-y-5' : 'max-w-3xl mx-auto space-y-8'}>
@@ -101,6 +152,128 @@ export default function ReportLost({ variant = 'page', onClose, onSuccess }) {
                 </div>
             )}
 
+            {/* ═══════════ SMART MATCH SUGGESTIONS ═══════════ */}
+            {hasMatches && !matchesDismissed && (
+                <div className="space-y-4 animate-fade-in-up">
+                    {/* Smart Match Header */}
+                    <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                            <div className="relative">
+                                <Sparkles size={16} className="text-amber-400" />
+                                <div className="absolute inset-0 bg-amber-400 blur-md opacity-30 animate-pulse" />
+                            </div>
+                            <span className="text-xs font-black text-amber-400 uppercase tracking-widest">Smart Match</span>
+                            {matchLoading && (
+                                <div className="w-3 h-3 border-2 border-amber-400/30 border-t-amber-400 rounded-full animate-spin" />
+                            )}
+                        </div>
+                        <button
+                            onClick={() => setMatchesDismissed(true)}
+                            className="text-[10px] font-bold text-slate-500 uppercase tracking-wider hover:text-slate-300 transition-colors px-2 py-1 rounded-lg hover:bg-white/5"
+                        >
+                            Dismiss
+                        </button>
+                    </div>
+
+                    {/* Similar Reports */}
+                    {matches.similarReports.length > 0 && (
+                        <div className="bg-amber-500/5 border border-amber-500/15 rounded-2xl overflow-hidden">
+                            <button
+                                onClick={() => setShowReports(!showReports)}
+                                className="w-full flex items-center justify-between px-5 py-3.5 hover:bg-amber-500/5 transition-colors"
+                            >
+                                <div className="flex items-center gap-3">
+                                    <AlertTriangle size={16} className="text-amber-400" />
+                                    <span className="text-xs font-bold text-amber-300">
+                                        {matches.similarReports.length} Similar Report{matches.similarReports.length > 1 ? 's' : ''} Found
+                                    </span>
+                                </div>
+                                {showReports ? <ChevronUp size={16} className="text-amber-400" /> : <ChevronDown size={16} className="text-amber-400" />}
+                            </button>
+                            {showReports && (
+                                <div className="px-5 pb-4 space-y-2">
+                                    <p className="text-[10px] text-slate-500 font-semibold mb-3">
+                                        Someone else may have already reported a similar item. You can still continue.
+                                    </p>
+                                    {matches.similarReports.map(r => (
+                                        <div key={r.id} className="flex items-center gap-4 bg-slate-800/60 p-3.5 rounded-xl border border-white/5">
+                                            <div className="w-9 h-9 rounded-lg bg-amber-500/10 flex items-center justify-center text-lg border border-amber-500/20 shrink-0">
+                                                {r.category?.icon || '📦'}
+                                            </div>
+                                            <div className="flex-1 min-w-0">
+                                                <p className="text-sm font-bold text-white truncate">{r.item_name}</p>
+                                                <div className="flex items-center gap-3 mt-0.5">
+                                                    <span className="text-[10px] text-slate-500 font-semibold flex items-center gap-1">
+                                                        <MapPin size={10} /> {r.lost_location}
+                                                    </span>
+                                                    <span className="text-[10px] text-slate-600 font-semibold">
+                                                        {new Date(r.created_at).toLocaleDateString()}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+                    )}
+
+                    {/* Inventory Matches */}
+                    {matches.inventoryMatches.length > 0 && (
+                        <div className="bg-emerald-500/5 border border-emerald-500/15 rounded-2xl overflow-hidden">
+                            <button
+                                onClick={() => setShowInventory(!showInventory)}
+                                className="w-full flex items-center justify-between px-5 py-3.5 hover:bg-emerald-500/5 transition-colors"
+                            >
+                                <div className="flex items-center gap-3">
+                                    <Sparkles size={16} className="text-emerald-400" />
+                                    <span className="text-xs font-bold text-emerald-300">
+                                        🎉 {matches.inventoryMatches.length} Potential Match{matches.inventoryMatches.length > 1 ? 'es' : ''} in Inventory!
+                                    </span>
+                                </div>
+                                {showInventory ? <ChevronUp size={16} className="text-emerald-400" /> : <ChevronDown size={16} className="text-emerald-400" />}
+                            </button>
+                            {showInventory && (
+                                <div className="px-5 pb-4 space-y-2">
+                                    <p className="text-[10px] text-slate-500 font-semibold mb-3">
+                                        Your item might already be found! Check these matches before submitting.
+                                    </p>
+                                    {matches.inventoryMatches.map(item => (
+                                        <div
+                                            key={item.id}
+                                            onClick={() => navigate('/student/inventory')}
+                                            className="flex items-center gap-4 bg-slate-800/60 p-3.5 rounded-xl border border-emerald-500/10 cursor-pointer hover:border-emerald-500/30 hover:bg-emerald-500/5 transition-all group"
+                                        >
+                                            <div className="w-11 h-11 rounded-xl overflow-hidden bg-slate-700/50 border border-white/10 shrink-0 flex items-center justify-center">
+                                                {item.image_url ? (
+                                                    <img src={item.image_url} alt="" className="w-full h-full object-cover" />
+                                                ) : (
+                                                    <span className="text-lg">{item.category?.icon || '📦'}</span>
+                                                )}
+                                            </div>
+                                            <div className="flex-1 min-w-0">
+                                                <p className="text-sm font-bold text-white truncate">{item.item_name}</p>
+                                                <div className="flex items-center gap-3 mt-0.5">
+                                                    <span className="text-[10px] text-slate-500 font-semibold flex items-center gap-1">
+                                                        <MapPin size={10} /> {item.found_location}
+                                                    </span>
+                                                    <span className="text-[10px] text-slate-600 font-semibold">
+                                                        Found {new Date(item.date_found).toLocaleDateString()}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                            <div className="shrink-0 text-emerald-400 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                <ExternalLink size={16} />
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+                    )}
+                </div>
+            )}
+
             {/* Form */}
             <div className="bg-slate-800/60 rounded-2xl p-8 sm:p-10 border border-white/8">
                 <form onSubmit={handleSubmit} className="space-y-8">
@@ -121,6 +294,11 @@ export default function ReportLost({ variant = 'page', onClose, onSuccess }) {
                                         placeholder="e.g. MacBook Air M2 Space Grey"
                                         className="w-full bg-slate-900/60 border border-white/10 rounded-xl pl-12 pr-5 py-3.5 text-white placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500/40 transition-all font-semibold"
                                     />
+                                    {matchLoading && (
+                                        <div className="absolute inset-y-0 right-0 pr-4 flex items-center">
+                                            <div className="w-4 h-4 border-2 border-indigo-400/30 border-t-indigo-400 rounded-full animate-spin" />
+                                        </div>
+                                    )}
                                 </div>
                             </div>
 
@@ -153,20 +331,34 @@ export default function ReportLost({ variant = 'page', onClose, onSuccess }) {
                         {/* Location & Time */}
                         <div className="space-y-6">
                             <div className="space-y-2">
-                                <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1 block">Last Known Location <span className="text-red-400">*</span></label>
+                                <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1 block">Location Area <span className="text-red-400">*</span></label>
                                 <div className="relative group">
                                     <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-600 group-focus-within:text-indigo-400 transition-colors">
                                         <MapPin size={18} />
                                     </div>
-                                    <input
-                                        type="text"
+                                    <select
                                         required
-                                        value={form.lostLocation}
-                                        onChange={update('lostLocation')}
-                                        placeholder="e.g. Science Block, 3rd Floor"
-                                        className="w-full bg-slate-900/60 border border-white/10 rounded-xl pl-12 pr-5 py-3.5 text-white placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500/40 transition-all font-semibold"
-                                    />
+                                        value={form.locationId}
+                                        onChange={update('locationId')}
+                                        className="w-full bg-slate-900/60 border border-white/10 rounded-xl pl-12 pr-5 py-3.5 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500/40 transition-all font-semibold appearance-none cursor-pointer"
+                                    >
+                                        <option value="">Select area...</option>
+                                        {locations.map((l) => (
+                                            <option key={l.id} value={l.id}>{l.icon} {l.name}</option>
+                                        ))}
+                                    </select>
                                 </div>
+                            </div>
+
+                            <div className="space-y-2">
+                                <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1 block">Specific Location <span className="text-slate-600">(Optional)</span></label>
+                                <input
+                                    type="text"
+                                    value={form.specificLocation}
+                                    onChange={update('specificLocation')}
+                                    placeholder="e.g. 3rd Floor, near water cooler"
+                                    className="w-full bg-slate-900/60 border border-white/10 rounded-xl px-5 py-3.5 text-white placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500/40 transition-all font-semibold"
+                                />
                             </div>
 
                             <div className="space-y-2">

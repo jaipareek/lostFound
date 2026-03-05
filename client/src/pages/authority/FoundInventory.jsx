@@ -1,4 +1,5 @@
-﻿import { useState, useEffect, useCallback } from 'react'
+﻿import { useState, useEffect, useCallback, useRef } from 'react'
+import { useNavigate } from 'react-router-dom'
 import api from '../../lib/axios'
 import toast from 'react-hot-toast'
 import StatusBadge from '../../components/StatusBadge'
@@ -9,15 +10,17 @@ import ConfirmDialog from '../../components/ConfirmDialog'
 import ImageUpload from '../../components/ImageUpload'
 import EmptyState from '../../components/EmptyState'
 import { CardSkeleton } from '../../components/LoadingSkeleton'
-import { Plus, MapPin, Calendar, Warehouse, Edit, Trash2 } from 'lucide-react'
+import { Plus, MapPin, Calendar, Warehouse, Edit, Trash2, Sparkles, User, ChevronDown, ChevronUp, FileText, ExternalLink } from 'lucide-react'
 
 export default function FoundInventory() {
+    const navigate = useNavigate()
     const [items, setItems] = useState([])
     const [categories, setCategories] = useState([])
+    const [locations, setLocations] = useState([])
     const [loading, setLoading] = useState(true)
     const [search, setSearch] = useState('')
     const [categoryId, setCategoryId] = useState('')
-    const [status, setStatus] = useState('AVAILABLE') // Default to available items
+    const [status, setStatus] = useState('AVAILABLE')
 
     // Modal states
     const [isModalOpen, setIsModalOpen] = useState(false)
@@ -29,20 +32,28 @@ export default function FoundInventory() {
     const [itemToDelete, setItemToDelete] = useState(null)
     const [submittingDelete, setSubmittingDelete] = useState(false)
 
+    // Smart Match state
+    const [matchingReports, setMatchingReports] = useState([])
+    const [matchLoading, setMatchLoading] = useState(false)
+    const [matchesDismissed, setMatchesDismissed] = useState(false)
+    const [showMatches, setShowMatches] = useState(true)
+    const debounceRef = useRef(null)
+
     // Form states
     const [formData, setFormData] = useState({
         itemName: '',
         categoryId: '',
         description: '',
-        foundLocation: '',
+        locationId: '',
+        specificLocation: '',
         dateFound: new Date().toISOString().split('T')[0],
         imageUrl: '',
         status: 'AVAILABLE'
     })
 
-    // Fetch categories on mount
     useEffect(() => {
         api.get('/categories').then(({ data }) => setCategories(data.categories || []))
+        api.get('/locations').then(({ data }) => setLocations(data.locations || []))
     }, [])
 
     const fetchItems = useCallback(async () => {
@@ -67,6 +78,37 @@ export default function FoundInventory() {
         return () => clearTimeout(t)
     }, [fetchItems])
 
+    // Debounced match checking for authority
+    const checkForMatches = useCallback(async (itemName, catId) => {
+        if (!itemName || itemName.trim().length < 3) {
+            setMatchingReports([])
+            return
+        }
+        setMatchLoading(true)
+        try {
+            const { data } = await api.post('/found-items/check-matches', {
+                itemName: itemName.trim(),
+                categoryId: catId || null,
+            })
+            setMatchingReports(data.matchingReports || [])
+            setMatchesDismissed(false)
+        } catch {
+            // Silently fail
+        } finally {
+            setMatchLoading(false)
+        }
+    }, [])
+
+    // Trigger match check when form item name or category changes
+    useEffect(() => {
+        if (!isModalOpen || editingItem) return // Only for new items
+        if (debounceRef.current) clearTimeout(debounceRef.current)
+        debounceRef.current = setTimeout(() => {
+            checkForMatches(formData.itemName, formData.categoryId)
+        }, 600)
+        return () => { if (debounceRef.current) clearTimeout(debounceRef.current) }
+    }, [formData.itemName, formData.categoryId, isModalOpen, editingItem, checkForMatches])
+
     const handleOpenModal = (item = null) => {
         if (item) {
             setEditingItem(item)
@@ -74,7 +116,8 @@ export default function FoundInventory() {
                 itemName: item.item_name,
                 categoryId: item.category_id || '',
                 description: item.description || '',
-                foundLocation: item.found_location,
+                locationId: item.location_id || '',
+                specificLocation: '',
                 dateFound: new Date(item.date_found).toISOString().split('T')[0],
                 imageUrl: item.image_url || '',
                 status: item.status
@@ -85,12 +128,16 @@ export default function FoundInventory() {
                 itemName: '',
                 categoryId: '',
                 description: '',
-                foundLocation: '',
+                locationId: '',
+                specificLocation: '',
                 dateFound: new Date().toISOString().split('T')[0],
                 imageUrl: '',
                 status: 'AVAILABLE'
             })
         }
+        setMatchingReports([])
+        setMatchesDismissed(false)
+        setShowMatches(true)
         setIsModalOpen(true)
     }
 
@@ -111,7 +158,6 @@ export default function FoundInventory() {
 
     const handleSubmit = async (e) => {
         e.preventDefault()
-        // Validations
         if (!formData.itemName.trim() || formData.itemName.trim().length < 2) {
             return toast.error('Item name must be at least 2 characters')
         }
@@ -121,16 +167,30 @@ export default function FoundInventory() {
         if (new Date(formData.dateFound) > new Date()) {
             return toast.error('Date found cannot be in the future')
         }
-        if (!formData.foundLocation.trim() || formData.foundLocation.trim().length < 2) {
-            return toast.error('Found location must be at least 2 characters')
+        if (!formData.locationId && !editingItem) {
+            return toast.error('Please select a location area')
         }
+
+        // Build foundLocation string: "Location Name — specific details"
+        const selectedLoc = locations.find(l => l.id === formData.locationId)
+        const locationText = selectedLoc
+            ? (formData.specificLocation ? `${selectedLoc.name} — ${formData.specificLocation}` : selectedLoc.name)
+            : formData.specificLocation || 'Unknown'
+
         setFormLoading(true)
         try {
+            const payload = {
+                ...formData,
+                foundLocation: locationText,
+                locationId: formData.locationId || null,
+            }
+            delete payload.specificLocation
+
             if (editingItem) {
-                await api.patch(`/found-items/${editingItem.id}`, formData)
+                await api.patch(`/found-items/${editingItem.id}`, payload)
                 toast.success('Item updated successfully')
             } else {
-                await api.post('/found-items', formData)
+                await api.post('/found-items', payload)
                 toast.success('Item added to inventory')
             }
             setIsModalOpen(false)
@@ -302,11 +362,18 @@ export default function FoundInventory() {
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <div className="sm:col-span-2">
                                 <label className="block text-sm font-semibold text-slate-700 mb-1.5">Item Name <span className="text-red-400">*</span></label>
-                                <input
-                                    required type="text" placeholder="e.g. Blue Dell Laptop"
-                                    className="input" value={formData.itemName}
-                                    onChange={e => setFormData({ ...formData, itemName: e.target.value })}
-                                />
+                                <div className="relative">
+                                    <input
+                                        required type="text" placeholder="e.g. Blue Dell Laptop"
+                                        className="input" value={formData.itemName}
+                                        onChange={e => setFormData({ ...formData, itemName: e.target.value })}
+                                    />
+                                    {matchLoading && (
+                                        <div className="absolute inset-y-0 right-0 pr-3 flex items-center">
+                                            <div className="w-4 h-4 border-2 border-indigo-400/30 border-t-indigo-400 rounded-full animate-spin" />
+                                        </div>
+                                    )}
+                                </div>
                             </div>
                             <div>
                                 <label className="block text-sm font-semibold text-slate-700 mb-1.5">Category</label>
@@ -327,6 +394,75 @@ export default function FoundInventory() {
                         </div>
                     </div>
 
+                    {/* ═══════════ SMART MATCH — Lost Report Suggestions ═══════════ */}
+                    {!editingItem && matchingReports.length > 0 && !matchesDismissed && (
+                        <div className="bg-amber-500/5 border border-amber-500/20 rounded-2xl overflow-hidden animate-fade-in-up">
+                            <button
+                                type="button"
+                                onClick={() => setShowMatches(!showMatches)}
+                                className="w-full flex items-center justify-between px-5 py-3.5 hover:bg-amber-500/5 transition-colors"
+                            >
+                                <div className="flex items-center gap-3">
+                                    <div className="relative">
+                                        <Sparkles size={16} className="text-amber-400" />
+                                        <div className="absolute inset-0 bg-amber-400 blur-md opacity-30 animate-pulse" />
+                                    </div>
+                                    <span className="text-xs font-bold text-amber-300">
+                                        ⚡ {matchingReports.length} Matching Lost Report{matchingReports.length > 1 ? 's' : ''} Found!
+                                    </span>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    <button
+                                        type="button"
+                                        onClick={(e) => { e.stopPropagation(); setMatchesDismissed(true) }}
+                                        className="text-[10px] font-bold text-slate-500 uppercase tracking-wider hover:text-slate-300 transition-colors px-2 py-1 rounded-lg hover:bg-white/5"
+                                    >
+                                        Dismiss
+                                    </button>
+                                    {showMatches ? <ChevronUp size={16} className="text-amber-400" /> : <ChevronDown size={16} className="text-amber-400" />}
+                                </div>
+                            </button>
+                            {showMatches && (
+                                <div className="px-5 pb-4 space-y-2">
+                                    <p className="text-[10px] text-slate-500 font-semibold mb-3">
+                                        A student may have already reported losing a similar item. Review these reports:
+                                    </p>
+                                    {matchingReports.map(r => (
+                                        <div key={r.id} className="flex items-center gap-4 bg-slate-800/60 p-3.5 rounded-xl border border-amber-500/10">
+                                            <div className="w-10 h-10 rounded-xl bg-amber-500/10 flex items-center justify-center text-lg border border-amber-500/20 shrink-0">
+                                                {r.category?.icon || '📄'}
+                                            </div>
+                                            <div className="flex-1 min-w-0">
+                                                <p className="text-sm font-bold text-white truncate">{r.item_name}</p>
+                                                <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-1">
+                                                    <span className="text-[10px] text-slate-400 font-semibold flex items-center gap-1">
+                                                        <User size={10} /> {r.reporter?.full_name || 'Unknown'}
+                                                    </span>
+                                                    <span className="text-[10px] text-slate-500 font-semibold flex items-center gap-1">
+                                                        <MapPin size={10} /> {r.lost_location}
+                                                    </span>
+                                                    <span className="text-[10px] text-slate-600 font-semibold flex items-center gap-1">
+                                                        <Calendar size={10} /> {new Date(r.created_at).toLocaleDateString()}
+                                                    </span>
+                                                </div>
+                                                {r.description && (
+                                                    <p className="text-[10px] text-slate-500 mt-1 truncate italic">"{r.description}"</p>
+                                                )}
+                                            </div>
+                                            <button
+                                                type="button"
+                                                onClick={() => { setIsModalOpen(false); navigate('/authority/lost') }}
+                                                className="shrink-0 flex items-center gap-1.5 px-3 py-1.5 bg-amber-500/10 text-amber-400 rounded-lg text-[10px] font-bold uppercase tracking-wider border border-amber-500/20 hover:bg-amber-500/20 hover:text-amber-300 transition-all whitespace-nowrap"
+                                            >
+                                                View Report <ExternalLink size={11} />
+                                            </button>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+                    )}
+
                     {/* Divider */}
                     <div className="border-t border-slate-100" />
 
@@ -334,11 +470,23 @@ export default function FoundInventory() {
                     <div className="space-y-4">
                         <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest">Location Info</h3>
                         <div>
-                            <label className="block text-sm font-semibold text-slate-700 mb-1.5">Found Location <span className="text-red-400">*</span></label>
+                            <label className="block text-sm font-semibold text-slate-700 mb-1.5">Location Area <span className="text-red-400">*</span></label>
+                            <select
+                                className="input"
+                                value={formData.locationId}
+                                onChange={e => setFormData({ ...formData, locationId: e.target.value })}
+                                required={!editingItem}
+                            >
+                                <option value="">Select area...</option>
+                                {locations.map(l => (<option key={l.id} value={l.id}>{l.icon} {l.name}</option>))}
+                            </select>
+                        </div>
+                        <div>
+                            <label className="block text-sm font-semibold text-slate-700 mb-1.5">Specific Location <span className="text-slate-400 text-xs font-normal">(Optional)</span></label>
                             <input
-                                required type="text" placeholder="e.g. Library 2nd Floor"
-                                className="input" value={formData.foundLocation}
-                                onChange={e => setFormData({ ...formData, foundLocation: e.target.value })}
+                                type="text" placeholder="e.g. 3rd Floor, Room 204, near stairs"
+                                className="input" value={formData.specificLocation}
+                                onChange={e => setFormData({ ...formData, specificLocation: e.target.value })}
                             />
                         </div>
                     </div>

@@ -26,6 +26,7 @@ import Disputes from './pages/authority/Disputes'
 // Admin pages (stubs — built in Week 4)
 import UserManagement from './pages/admin/UserManagement'
 import Categories from './pages/admin/Categories'
+import Locations from './pages/admin/Locations'
 import ActivityLogs from './pages/admin/ActivityLogs'
 import ModerateReports from './pages/admin/ModerateReports'
 
@@ -100,6 +101,7 @@ function AppRoutes() {
                                 <Route index element={<Navigate to="users" replace />} />
                                 <Route path="users" element={<UserManagement />} />
                                 <Route path="categories" element={<Categories />} />
+                                <Route path="locations" element={<Locations />} />
                                 <Route path="logs" element={<ActivityLogs />} />
                                 <Route path="reports" element={<ModerateReports />} />
                             </Routes>

@@ -322,7 +322,7 @@ export default function LostReports() {
                         : 'Reject this report — it will be marked as invalid.'
                 }
                 confirmLabel={confirm.action === 'CLOSED' ? 'Yes, Close' : 'Yes, Reject'}
-                variant={confirm.action === 'REJECTED' ? 'danger' : 'primary'}
+                danger={confirm.action === 'REJECTED'}
             />
         </div>
     )
