@@ -106,18 +106,20 @@ export const createFoundItem = async (req, res) => {
 // Supports ?status= ?search= ?categoryId=
 // ─────────────────────────────────────
 export const getAllFoundItems = async (req, res) => {
-    const { status, search, categoryId } = req.query
+    const { status, search, categoryId, locationId } = req.query
 
     let query = supabase
         .from('found_items')
         .select(`
       *,
-      category:categories(name, icon)
+      category:categories(name, icon),
+      location:locations(name, icon)
     `)
         .order('created_at', { ascending: false })
 
     if (status) query = query.eq('status', status)
     if (categoryId) query = query.eq('category_id', categoryId)
+    if (locationId) query = query.eq('location_id', locationId)
     if (search) query = query.ilike('item_name', `%${search}%`)
 
     const { data, error } = await query

@@ -2,11 +2,11 @@
 import api from '../../lib/axios'
 import toast from 'react-hot-toast'
 import SearchBar from '../../components/SearchBar'
-import CategoryFilter from '../../components/CategoryFilter'
 import FoundItemCard from '../../components/FoundItemCard'
 import ClaimModal from '../../components/ClaimModal'
 import EmptyState from '../../components/EmptyState'
 import { CardSkeleton } from '../../components/LoadingSkeleton'
+import { MapPin, Layers } from 'lucide-react'
 
 const ITEMS_PER_PAGE = 12
 
@@ -14,21 +14,24 @@ export default function StudentInventory() {
     // Data state
     const [items, setItems] = useState([])
     const [categories, setCategories] = useState([])
+    const [locations, setLocations] = useState([])
     const [loading, setLoading] = useState(true)
     const [total, setTotal] = useState(0)
 
     // Filter state
     const [search, setSearch] = useState('')
     const [selectedCategory, setSelectedCategory] = useState('')
+    const [selectedLocation, setSelectedLocation] = useState('')
     const [statusFilter, setStatusFilter] = useState('AVAILABLE')
     const [page, setPage] = useState(1)
 
     // Claim modal state
     const [claimItem, setClaimItem] = useState(null)
 
-    // Fetch categories once on mount
+    // Fetch categories & locations once on mount
     useEffect(() => {
         api.get('/categories').then(({ data }) => setCategories(data.categories || []))
+        api.get('/locations').then(({ data }) => setLocations(data.locations || []))
     }, [])
 
     // Fetch found items whenever filters change
@@ -38,6 +41,7 @@ export default function StudentInventory() {
             const params = new URLSearchParams()
             if (search) params.set('search', search)
             if (selectedCategory) params.set('categoryId', selectedCategory)
+            if (selectedLocation) params.set('locationId', selectedLocation)
             if (statusFilter) params.set('status', statusFilter)
 
             const { data } = await api.get(`/found-items?${params}`)
@@ -49,7 +53,7 @@ export default function StudentInventory() {
         } finally {
             setLoading(false)
         }
-    }, [search, selectedCategory, statusFilter])
+    }, [search, selectedCategory, selectedLocation, statusFilter])
 
     useEffect(() => {
         const timer = setTimeout(fetchItems, 300)  // debounce search
@@ -94,9 +98,9 @@ export default function StudentInventory() {
                 </div>
             </div>
 
-            {/* Search + Category filter */}
+            {/* Search + Filters */}
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-end">
-                <div className="lg:col-span-5">
+                <div className="lg:col-span-3">
                     <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1 mb-2 block">Quick Search</label>
                     <SearchBar
                         value={search}
@@ -104,12 +108,41 @@ export default function StudentInventory() {
                         placeholder="Search items by name..."
                     />
                 </div>
-                <div className="lg:col-span-7">
-                    <CategoryFilter
-                        categories={categories}
-                        selected={selectedCategory}
-                        onChange={setSelectedCategory}
-                    />
+                <div className="lg:col-span-3">
+                    <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1 mb-2 block">Filter by Location</label>
+                    <div className="relative">
+                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-500">
+                            <MapPin size={16} />
+                        </div>
+                        <select
+                            value={selectedLocation}
+                            onChange={(e) => setSelectedLocation(e.target.value)}
+                            className="w-full bg-slate-800/50 border border-white/10 rounded-xl pl-10 pr-4 py-2.5 text-sm text-white font-semibold appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500/40 transition-all"
+                        >
+                            <option value="">All Locations</option>
+                            {locations.map((l) => (
+                                <option key={l.id} value={l.id}>{l.icon} {l.name}</option>
+                            ))}
+                        </select>
+                    </div>
+                </div>
+                <div className="lg:col-span-3">
+                    <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1 mb-2 block">Filter by Category</label>
+                    <div className="relative">
+                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-500">
+                            <Layers size={16} />
+                        </div>
+                        <select
+                            value={selectedCategory}
+                            onChange={(e) => setSelectedCategory(e.target.value)}
+                            className="w-full bg-slate-800/50 border border-white/10 rounded-xl pl-10 pr-4 py-2.5 text-sm text-white font-semibold appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500/40 transition-all"
+                        >
+                            <option value="">All Categories</option>
+                            {categories.map((c) => (
+                                <option key={c.id} value={c.id}>{c.icon} {c.name}</option>
+                            ))}
+                        </select>
+                    </div>
                 </div>
             </div>
 

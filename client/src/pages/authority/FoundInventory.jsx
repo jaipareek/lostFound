@@ -4,13 +4,12 @@ import api from '../../lib/axios'
 import toast from 'react-hot-toast'
 import StatusBadge from '../../components/StatusBadge'
 import SearchBar from '../../components/SearchBar'
-import CategoryFilter from '../../components/CategoryFilter'
 import Modal from '../../components/Modal'
 import ConfirmDialog from '../../components/ConfirmDialog'
 import ImageUpload from '../../components/ImageUpload'
 import EmptyState from '../../components/EmptyState'
 import { CardSkeleton } from '../../components/LoadingSkeleton'
-import { Plus, MapPin, Calendar, Warehouse, Edit, Trash2, Sparkles, User, ChevronDown, ChevronUp, FileText, ExternalLink } from 'lucide-react'
+import { Plus, MapPin, Calendar, Warehouse, Edit, Trash2, Sparkles, User, ChevronDown, ChevronUp, FileText, ExternalLink, Layers } from 'lucide-react'
 
 export default function FoundInventory() {
     const navigate = useNavigate()
@@ -20,6 +19,7 @@ export default function FoundInventory() {
     const [loading, setLoading] = useState(true)
     const [search, setSearch] = useState('')
     const [categoryId, setCategoryId] = useState('')
+    const [locationFilterId, setLocationFilterId] = useState('')
     const [status, setStatus] = useState('AVAILABLE')
 
     // Modal states
@@ -62,6 +62,7 @@ export default function FoundInventory() {
             const params = new URLSearchParams()
             if (search) params.set('search', search)
             if (categoryId) params.set('categoryId', categoryId)
+            if (locationFilterId) params.set('locationId', locationFilterId)
             if (status) params.set('status', status)
 
             const { data } = await api.get(`/found-items?${params}`)
@@ -71,7 +72,7 @@ export default function FoundInventory() {
         } finally {
             setLoading(false)
         }
-    }, [search, categoryId, status])
+    }, [search, categoryId, locationFilterId, status])
 
     useEffect(() => {
         const t = setTimeout(fetchItems, 300)
@@ -220,7 +221,7 @@ export default function FoundInventory() {
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-end">
-                <div className="lg:col-span-5 flex flex-col sm:flex-row gap-4">
+                <div className="lg:col-span-3 flex flex-col sm:flex-row gap-4">
                     <div className="flex-1">
                         <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1 mb-2 block">Quick Search</label>
                         <SearchBar
@@ -229,33 +230,62 @@ export default function FoundInventory() {
                             placeholder="Search item name..."
                         />
                     </div>
-                    <div>
-                        <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1 mb-2 block">Status Filter</label>
-                        <div className="flex p-1 bg-gray-100/80 backdrop-blur-sm rounded-2xl border border-gray-200/50">
-                            {[
-                                { id: 'AVAILABLE', label: 'In Vault' },
-                                { id: 'CLOSED', label: 'Returned' }
-                            ].map((s) => (
-                                <button
-                                    key={s.id}
-                                    onClick={() => setStatus(s.id)}
-                                    className={`px-4 py-2 text-[10px] font-black uppercase tracking-widest rounded-xl transition-all ${status === s.id
-                                        ? 'bg-white text-primary-600 shadow-sm'
-                                        : 'text-gray-500 hover:text-gray-900'
-                                        }`}
-                                >
-                                    {s.label}
-                                </button>
-                            ))}
+                </div>
+                <div className="lg:col-span-2">
+                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1 mb-2 block">Location</label>
+                    <div className="relative">
+                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
+                            <MapPin size={16} />
                         </div>
+                        <select
+                            value={locationFilterId}
+                            onChange={(e) => setLocationFilterId(e.target.value)}
+                            className="w-full bg-white border border-gray-200 rounded-xl pl-10 pr-4 py-2.5 text-sm text-gray-700 font-semibold appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary-200 focus:border-primary-400 transition-all shadow-sm"
+                        >
+                            <option value="">All</option>
+                            {locations.map((l) => (
+                                <option key={l.id} value={l.id}>{l.icon} {l.name}</option>
+                            ))}
+                        </select>
                     </div>
                 </div>
-                <div className="lg:col-span-7">
-                    <CategoryFilter
-                        categories={categories}
-                        selected={categoryId}
-                        onChange={setCategoryId}
-                    />
+                <div className="lg:col-span-2">
+                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1 mb-2 block">Status</label>
+                    <div className="flex p-1 bg-gray-100/80 backdrop-blur-sm rounded-2xl border border-gray-200/50">
+                        {[
+                            { id: 'AVAILABLE', label: 'In Vault' },
+                            { id: 'CLOSED', label: 'Returned' }
+                        ].map((s) => (
+                            <button
+                                key={s.id}
+                                onClick={() => setStatus(s.id)}
+                                className={`px-4 py-2 text-[10px] font-black uppercase tracking-widest rounded-xl transition-all ${status === s.id
+                                    ? 'bg-white text-primary-600 shadow-sm'
+                                    : 'text-gray-500 hover:text-gray-900'
+                                    }`}
+                            >
+                                {s.label}
+                            </button>
+                        ))}
+                    </div>
+                </div>
+                <div className="lg:col-span-2">
+                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1 mb-2 block">Category</label>
+                    <div className="relative">
+                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
+                            <Layers size={16} />
+                        </div>
+                        <select
+                            value={categoryId}
+                            onChange={(e) => setCategoryId(e.target.value)}
+                            className="w-full bg-white border border-gray-200 rounded-xl pl-10 pr-4 py-2.5 text-sm text-gray-700 font-semibold appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary-200 focus:border-primary-400 transition-all shadow-sm"
+                        >
+                            <option value="">All</option>
+                            {categories.map((c) => (
+                                <option key={c.id} value={c.id}>{c.icon} {c.name}</option>
+                            ))}
+                        </select>
+                    </div>
                 </div>
             </div>
 
