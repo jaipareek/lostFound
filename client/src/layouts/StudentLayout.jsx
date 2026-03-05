@@ -3,6 +3,7 @@ import { useAuth } from '../context/AuthContext'
 import toast from 'react-hot-toast'
 import { Search, ClipboardList, LogOut, Menu, X } from 'lucide-react'
 import { useState, useEffect } from 'react'
+import NotificationBell from '../components/NotificationBell'
 
 const NAV_ITEMS = [
     { to: '/student/inventory', icon: Search, label: 'Found Items' },
@@ -73,8 +74,9 @@ export default function StudentLayout({ children }) {
                             ))}
                         </nav>
 
-                        {/* User + Logout */}
+                        {/* Notification Bell + User + Logout */}
                         <div className="flex items-center gap-2">
+                            <NotificationBell />
                             <div className="hidden sm:flex items-center gap-2.5 px-3 py-1.5 rounded-xl bg-white/5 border border-white/10 backdrop-blur-sm">
                                 <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center text-white font-bold text-xs shadow-sm">
                                     {user?.fullName?.charAt(0) || 'S'}

@@ -42,6 +42,9 @@ export default function ClaimModal({ isOpen, onClose, item, onSuccess }) {
             onClose()
         } catch (err) {
             toast.error(err.response?.data?.message || 'Failed to submit claim')
+            if (err.response?.status === 409) {
+                onClose()
+            }
         } finally {
             setLoading(false)
         }

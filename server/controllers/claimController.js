@@ -264,6 +264,43 @@ export const approveClaim = async (req, res) => {
         metadata: { winning_claim_id: id, claimant_id: claim.claimed_by },
     })
 
+    // ─── NOTIFICATIONS ───
+    // Get item name for the notification message
+    const { data: foundItem } = await supabase
+        .from('found_items')
+        .select('item_name')
+        .eq('id', claim.found_item_id)
+        .single()
+    const itemName = foundItem?.item_name || 'an item'
+
+    // Notify the approved claimant
+    await supabase.from('notifications').insert({
+        user_id: claim.claimed_by,
+        type: 'CLAIM_APPROVED',
+        title: '🎉 Claim Approved!',
+        message: `Your claim for "${itemName}" has been approved! Please visit the Lost & Found office to collect your item.`,
+        metadata: { claim_id: id, found_item_id: claim.found_item_id },
+    })
+
+    // Notify auto-rejected claimants
+    const { data: rejectedClaims } = await supabase
+        .from('claims')
+        .select('claimed_by')
+        .eq('found_item_id', claim.found_item_id)
+        .eq('status', 'REJECTED')
+        .neq('id', id)
+
+    if (rejectedClaims?.length > 0) {
+        const rejectNotifs = rejectedClaims.map(rc => ({
+            user_id: rc.claimed_by,
+            type: 'CLAIM_REJECTED',
+            title: '❌ Claim Rejected',
+            message: `Your claim for "${itemName}" was not approved. The item has been claimed by another student.`,
+            metadata: { claim_id: id, found_item_id: claim.found_item_id },
+        }))
+        await supabase.from('notifications').insert(rejectNotifs)
+    }
+
     res.json({ message: 'Claim approved. Item marked as CLOSED and other claims rejected.' })
 }
 
@@ -301,6 +338,23 @@ export const rejectClaim = async (req, res) => {
         target_type: 'claim',
     })
 
+    // ─── NOTIFICATION ───
+    const { data: claimDetail } = await supabase
+        .from('claims')
+        .select('claimed_by, found_item_id, found_item:found_items(item_name)')
+        .eq('id', id)
+        .single()
+
+    if (claimDetail) {
+        await supabase.from('notifications').insert({
+            user_id: claimDetail.claimed_by,
+            type: 'CLAIM_REJECTED',
+            title: '❌ Claim Rejected',
+            message: `Your claim for "${claimDetail.found_item?.item_name || 'an item'}" has been rejected by the authority.`,
+            metadata: { claim_id: id, found_item_id: claimDetail.found_item_id },
+        })
+    }
+
     res.json({ message: 'Claim rejected', claim: data })
 }
 
@@ -329,6 +383,23 @@ export const requestMoreInfo = async (req, res) => {
         target_id: id,
         target_type: 'claim',
     })
+
+    // ─── NOTIFICATION ───
+    const { data: claimDetail } = await supabase
+        .from('claims')
+        .select('claimed_by, found_item_id, found_item:found_items(item_name)')
+        .eq('id', id)
+        .single()
+
+    if (claimDetail) {
+        await supabase.from('notifications').insert({
+            user_id: claimDetail.claimed_by,
+            type: 'CLAIM_INFO_REQUESTED',
+            title: 'ℹ️ More Info Requested',
+            message: `The authority needs more information about your claim for "${claimDetail.found_item?.item_name || 'an item'}". Please update your claim with additional details.`,
+            metadata: { claim_id: id, found_item_id: claimDetail.found_item_id },
+        })
+    }
 
     res.json({ message: 'Requested additional information. The student has been notified.', claim })
 }
