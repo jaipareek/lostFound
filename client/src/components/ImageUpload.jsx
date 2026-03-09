@@ -24,7 +24,8 @@ export default function ImageUpload({ value, onChange }) {
             formData.append('file', file)
 
             const token = localStorage.getItem('token')
-            const res = await fetch('/api/upload', {
+            const apiBase = import.meta.env.VITE_API_URL || '/api'
+            const res = await fetch(`${apiBase}/upload`, {
                 method: 'POST',
                 headers: { Authorization: `Bearer ${token}` },
                 body: formData,
