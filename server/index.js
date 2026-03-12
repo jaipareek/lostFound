@@ -1,6 +1,8 @@
 import express from 'express'
 import cors from 'cors'
 import dotenv from 'dotenv'
+import path from 'path'
+import { fileURLToPath } from 'url'
 
 // Route imports
 import authRoutes from './routes/auth.js'
@@ -18,6 +20,7 @@ dotenv.config()
 
 const app = express()
 const PORT = process.env.PORT || 5000
+const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
 // Middleware
 app.use(cors({
@@ -44,9 +47,13 @@ app.get('/api/health', (req, res) => {
     res.json({ status: 'OK', message: 'Lost & Found API is running', timestamp: new Date().toISOString() })
 })
 
-// 404 handler
-app.use((req, res) => {
-    res.status(404).json({ message: 'Route not found' })
+// ─── Serve React frontend in production ───
+const clientDist = path.join(__dirname, '..', 'client', 'dist')
+app.use(express.static(clientDist))
+
+// SPA catch-all: any non-API route serves index.html
+app.get('*', (req, res) => {
+    res.sendFile(path.join(clientDist, 'index.html'))
 })
 
 // Global error handler

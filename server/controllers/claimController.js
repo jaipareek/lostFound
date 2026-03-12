@@ -353,6 +353,25 @@ export const rejectClaim = async (req, res) => {
             message: `Your claim for "${claimDetail.found_item?.item_name || 'an item'}" has been rejected by the authority.`,
             metadata: { claim_id: id, found_item_id: claimDetail.found_item_id },
         })
+
+        // ─── AUTO-RESOLVE DISPUTE if no PENDING claims remain ───
+        const { count } = await supabase
+            .from('claims')
+            .select('id', { count: 'exact', head: true })
+            .eq('found_item_id', claimDetail.found_item_id)
+            .eq('status', 'PENDING')
+
+        if (count === 0) {
+            await supabase
+                .from('disputes')
+                .update({
+                    status: 'RESOLVED',
+                    resolved_by: req.user.id,
+                    resolved_at: new Date().toISOString(),
+                })
+                .eq('found_item_id', claimDetail.found_item_id)
+                .eq('status', 'OPEN')
+        }
     }
 
     res.json({ message: 'Claim rejected', claim: data })
