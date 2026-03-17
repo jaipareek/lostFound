@@ -369,14 +369,23 @@ export default function LandingPage() {
                             <span className="text-[15px] font-bold tracking-tight">CampusTrace</span>
                         </div>
 
-                        <a
-                            href="mailto:jai.pareek@mca.christuniversity.in"
-                            className="group flex items-center gap-3 text-white/30 hover:text-white transition-colors duration-300"
-                        >
-                            <Mail size={16} className="text-indigo-400" />
-                            <span className="text-sm font-semibold">jai.pareek@mca.christuniversity.in</span>
-                            <ArrowUpRight size={14} className="opacity-0 group-hover:opacity-100 transition-opacity" />
-                        </a>
+                        <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-6">
+                            <a href="mailto:jai.pareek@mca.christuniversity.in" className="group flex items-center gap-2 text-white/30 hover:text-white transition-colors duration-300">
+                                <Mail size={14} className="text-indigo-400" />
+                                <span className="text-xs sm:text-sm font-semibold">jai.pareek@mca.christuniversity.in</span>
+                                <ArrowUpRight size={12} className="opacity-0 group-hover:opacity-100 transition-opacity" />
+                            </a>
+                            <a href="mailto:enrita.fernandes@mca.christuniversity.in" className="group flex items-center gap-2 text-white/30 hover:text-white transition-colors duration-300">
+                                <Mail size={14} className="text-indigo-400" />
+                                <span className="text-xs sm:text-sm font-semibold">enrita.fernandes@mca.christuniversity.in</span>
+                                <ArrowUpRight size={12} className="opacity-0 group-hover:opacity-100 transition-opacity" />
+                            </a>
+                            <a href="mailto:aadharsh.krishnaa@mca.christuniversity.in" className="group flex items-center gap-2 text-white/30 hover:text-white transition-colors duration-300">
+                                <Mail size={14} className="text-indigo-400" />
+                                <span className="text-xs sm:text-sm font-semibold">aadharsh.krishnaa@mca.christuniversity.in</span>
+                                <ArrowUpRight size={12} className="opacity-0 group-hover:opacity-100 transition-opacity" />
+                            </a>
+                        </div>
                     </div>
                 </ScrollReveal>
             </footer>
