@@ -187,10 +187,7 @@ export default function LoginPage() {
                     </div>
                 </div>
 
-                {/* Bottom text */}
-                <p className="mt-10 text-center text-zinc-700 text-[10px] font-bold uppercase tracking-[0.25em] animate-fade-in-up stagger-6">
-                    MCA Christ University — Campus Safety Initiative
-                </p>
+
             </div>
         </div>
     )
